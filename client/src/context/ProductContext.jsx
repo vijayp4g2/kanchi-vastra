@@ -18,12 +18,20 @@ export const ProductProvider = ({ children }) => {
 
     const fetchProducts = async (params = {}) => {
         setLoading(true);
+        setError(null);
         try {
-            const data = await api.getProducts(params);
+            // CRITICAL FIX: Always fetch ALL products by setting high pageSize
+            // This ensures frontend gets complete product inventory
+            const data = await api.getProducts({
+                ...params,
+                pageSize: params.pageSize || 1000  // Default to 1000 to get all products
+            });
             // api.getProducts already transforms the data
-            setProducts(data.products || []);
+            const transformedProducts = data.products || [];
+            setProducts(transformedProducts);
             setLoading(false);
         } catch (err) {
+            console.error('Error fetching products:', err);
             setError(err.message);
             setLoading(false);
         }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
+    LayoutDashboard,
     ShoppingBag,
     Layers,
     Users,
@@ -8,11 +9,11 @@ import {
     LogOut,
     ChevronLeft,
     ChevronRight,
-    Home as HomeIcon,
+    Store,
     PieChart,
-    PlusCircle,
-    Circle,
-    Star
+    Sparkles,
+    Gem,
+    Menu
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -22,12 +23,10 @@ const AdminSidebar = () => {
     const navigate = useNavigate();
 
     const navItems = [
-        { icon: ShoppingBag, label: 'Sarees', path: '/admin/products' },
-        { icon: Star, label: 'New Arrivals', path: '/admin/new-arrivals' },
-        { icon: Circle, label: 'Bangles', path: '/admin/bangles' },
+        { icon: ShoppingBag, label: 'Sarees Collection', path: '/admin/products' },
+        { icon: Sparkles, label: 'New Arrivals', path: '/admin/new-arrivals' },
+        { icon: Gem, label: 'Bangles', path: '/admin/bangles' },
         { icon: Layers, label: 'Categories', path: '/admin/categories' },
-        { icon: PieChart, label: 'Analytics', path: '/admin/analytics' },
-        { icon: Settings, label: 'Settings', path: '/admin/settings' },
     ];
 
     const handleLogout = () => {
@@ -37,91 +36,123 @@ const AdminSidebar = () => {
 
     return (
         <aside
-            className={`bg-maroon-900 h-screen sticky top-0 transition-all duration-300 flex flex-col shadow-xl z-20 ${isCollapsed ? 'w-20' : 'w-64'
+            className={`bg-zinc-900 border-r border-zinc-800 h-screen sticky top-0 transition-all duration-300 flex flex-col z-50 text-white ${isCollapsed ? 'w-20' : 'w-72'
                 }`}
         >
-            {/* Header / Logo Section */}
-            <div className="p-6 flex items-center justify-between border-b border-maroon-800/50">
-                {!isCollapsed && (
-                    <div className="flex flex-col">
-                        <span className="text-gold-400 font-serif text-xl font-bold tracking-tight">Kanchi Vastra</span>
-                        <span className="text-gold-200/60 text-[10px] uppercase tracking-[0.2em] -mt-1 font-medium">Admin Panel</span>
+            {/* Logo Section */}
+            <div className="h-20 flex items-center justify-between px-6 border-b border-zinc-800">
+                {!isCollapsed ? (
+                    <div className="flex flex-col animate-in fade-in duration-300">
+                        <span className="font-serif text-2xl font-bold bg-gradient-to-r from-amber-200 to-amber-500 bg-clip-text text-transparent">
+                            Kanchi Vastra
+                        </span>
+                        <span className="text-[10px] uppercase tracking-[0.25em] text-zinc-500 font-medium">Control Panel</span>
                     </div>
-                )}
-                {isCollapsed && (
-                    <span className="text-gold-400 font-serif text-2xl font-bold mx-auto">KV</span>
+                ) : (
+                    <span className="font-serif text-2xl font-bold text-amber-500 mx-auto">KV</span>
                 )}
             </div>
 
-            {/* Navigation Section */}
-            <nav className="flex-1 mt-6 px-3 space-y-2 overflow-y-auto custom-scrollbar">
+            {/* Navigation */}
+            <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-zinc-700">
+                <div className="mb-2 px-3 text-xs font-bold text-zinc-600 uppercase tracking-widest">
+                    {!isCollapsed && 'Inventory'}
+                </div>
+
                 {navItems.map((item) => (
                     <NavLink
                         key={item.path}
                         to={item.path}
                         className={({ isActive }) =>
-                            `flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200 group relative ${isActive
-                                ? 'bg-gold-400/10 text-gold-400 border-l-4 border-gold-400'
-                                : 'text-gold-100/70 hover:bg-gold-400/5 hover:text-gold-300'
+                            `flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group relative ${isActive
+                                ? 'bg-amber-500/10 text-amber-500 shadow-sm shadow-amber-900/10'
+                                : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
                             }`
                         }
                     >
-                        <item.icon size={22} className="min-w-[22px]" />
+                        <item.icon size={20} className={`transition-transform duration-200 ${!isCollapsed && 'group-hover:scale-110'}`} />
                         {!isCollapsed && (
-                            <span className="font-medium tracking-wide text-sm">{item.label}</span>
+                            <span className="font-medium text-sm tracking-wide">{item.label}</span>
                         )}
-                        {/* Tooltip for collapsed state */}
+
+                        {/* Status Indicator for Active */}
+                        {({ isActive }) => isActive && !isCollapsed && (
+                            <div className="ml-auto w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                        )}
+
+                        {/* Collapsed Tooltip */}
                         {isCollapsed && (
-                            <div className="absolute left-full ml-4 px-2 py-1 bg-maroon-800 text-gold-200 text-xs rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
+                            <div className="absolute left-full ml-4 px-3 py-1.5 bg-zinc-800 text-white text-xs rounded border border-zinc-700 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-[60]">
                                 {item.label}
                             </div>
                         )}
                     </NavLink>
                 ))}
-            </nav>
 
-            {/* Bottom Actions */}
-            <div className="p-4 space-y-2 border-t border-maroon-800/50">
-                {/* Back to Site */}
+                <div className="my-6 border-t border-zinc-800 mx-3" />
+
+                <div className="mb-2 px-3 text-xs font-bold text-zinc-600 uppercase tracking-widest">
+                    {!isCollapsed && 'System'}
+                </div>
+
                 <NavLink
-                    to="/"
-                    className="flex items-center gap-4 px-4 py-3 rounded-lg text-gold-100/70 hover:bg-gold-400/5 transition-all group relative"
+                    to="/admin/analytics"
+                    className={({ isActive }) =>
+                        `flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${isActive ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`
+                    }
                 >
-                    <HomeIcon size={20} className="min-w-[20px]" />
-                    {!isCollapsed && <span className="text-sm">View Website</span>}
+                    <PieChart size={20} />
+                    {!isCollapsed && <span className="font-medium text-sm tracking-wide">Analytics</span>}
                 </NavLink>
 
-                {/* Collapse Toggle */}
+                <NavLink
+                    to="/admin/settings"
+                    className={({ isActive }) =>
+                        `flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${isActive ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`
+                    }
+                >
+                    <Settings size={20} />
+                    {!isCollapsed && <span className="font-medium text-sm tracking-wide">Settings</span>}
+                </NavLink>
+            </nav>
+
+            {/* Footer / User Profile */}
+            <div className="p-4 border-t border-zinc-800 bg-zinc-900/50">
+                <NavLink
+                    to="/"
+                    className="flex items-center justify-center gap-2 w-full py-2.5 mb-4 rounded-xl border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 hover:bg-zinc-800 transition-all text-xs font-bold uppercase tracking-wider"
+                >
+                    <Store size={16} />
+                    {!isCollapsed && "Live Store"}
+                </NavLink>
+
+                <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : 'px-2'}`}>
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-zinc-900 font-bold text-sm shadow-md">
+                        {user?.name?.charAt(0) || 'A'}
+                    </div>
+                    {!isCollapsed && (
+                        <div className="flex-1 overflow-hidden">
+                            <h4 className="text-sm font-semibold text-white truncate">{user?.name}</h4>
+                            <p className="text-[10px] text-zinc-500 truncate">Administrator</p>
+                        </div>
+                    )}
+                    {!isCollapsed && (
+                        <button
+                            onClick={handleLogout}
+                            className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                            title="Sign Out"
+                        >
+                            <LogOut size={16} />
+                        </button>
+                    )}
+                </div>
+
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="w-full flex items-center justify-center p-2 rounded-lg text-gold-100/50 hover:bg-gold-400/10 hover:text-gold-300 transition-all border border-maroon-800/30"
+                    className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-zinc-800 border-2 border-zinc-700 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:border-amber-500 transition-all z-50 shadow-sm"
                 >
-                    {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+                    {isCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
                 </button>
-
-                {/* User & Logout */}
-                <div className={`mt-4 pt-4 border-t border-maroon-800/30 overflow-hidden ${isCollapsed ? 'items-center' : 'px-2'}`}>
-                    <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
-                        <div className="w-8 h-8 rounded-full bg-gold-400/20 border border-gold-400/30 flex items-center justify-center text-gold-400 text-xs font-bold">
-                            {user?.name?.charAt(0) || 'A'}
-                        </div>
-                        {!isCollapsed && (
-                            <div className="flex-1 overflow-hidden">
-                                <p className="text-xs font-semibold text-gold-200 truncate">{user?.name || 'Admin'}</p>
-                                <p className="text-[10px] text-gold-100/40 truncate">Store Owner</p>
-                            </div>
-                        )}
-                        {!isCollapsed && (
-                            <button
-                                onClick={handleLogout}
-                                className="text-gold-200/40 hover:text-red-400 transition-colors"
-                                title="Log Out"
-                            >
-                                <LogOut size={16} />
-                            </button>
-                        )}
-                    </div>
-                </div>
             </div>
         </aside>
     );

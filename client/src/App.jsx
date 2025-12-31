@@ -48,6 +48,8 @@ const LayoutWrapper = ({ children }) => {
 import AdminLayout from './components/admin/AdminLayout';
 import ProductList from './pages/admin/ProductList';
 import CategoryList from './pages/admin/CategoryList';
+import Analytics from './pages/admin/Analytics';
+import Settings from './pages/admin/Settings';
 import AdminRoute from './components/admin/AdminRoute';
 
 function App() {
@@ -88,8 +90,8 @@ function App() {
                       <Route path="new-arrivals" element={<ProductList filterNewArrivals={true} />} />
                       <Route path="bangles" element={<ProductList initialCategory="Bangles" />} />
                       <Route path="categories" element={<CategoryList />} />
-                      <Route path="analytics" element={<div className="p-8 text-center text-gray-400">Analytics Coming Soon</div>} />
-                      <Route path="settings" element={<div className="p-8 text-center text-gray-400">Settings Coming Soon</div>} />
+                      <Route path="analytics" element={<Analytics />} />
+                      <Route path="settings" element={<Settings />} />
                     </Route>
 
                     {/* Catch-all potentially? For now rely on 404 behavior or specific catch */}

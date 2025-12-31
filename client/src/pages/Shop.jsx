@@ -25,28 +25,13 @@ const Shop = () => {
     const [activeFilters, setActiveFilters] = useState([]);
 
     // Derived data - ensure products is available
-    const [backendCategories, setBackendCategories] = useState([]);
-
-    // Derived data - ensure products is available
-    // const categories = products ? ['All', ...new Set(products.map(p => p.category))] : ['All'];
+    // FIXED: Include ALL categories (including Bangles) in the category list
+    const categories = products && products.length > 0
+        ? ['All', ...new Set(products
+            .filter(p => p.category)
+            .map(p => p.category))]
+        : ['All'];
     const maxPrice = products && products.length > 0 ? Math.max(...products.map(p => p.price)) : 50000;
-
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const data = await import('../utils/api').then(module => module.default.getCategories());
-                console.log("Fetched categories:", data);
-                setBackendCategories(data);
-            } catch (error) {
-                console.error("Failed to fetch categories:", error);
-            }
-        };
-        fetchCategories();
-    }, []);
-
-    const categories = backendCategories.length > 0
-        ? ['All', ...backendCategories.map(c => c.name)]
-        : (products ? ['All', ...new Set(products.map(p => p.category))] : ['All']);
 
 
     // Update state when URL category changes (e.g. from Header navigation)
@@ -72,20 +57,25 @@ const Shop = () => {
     // Handle filtering and sorting
     useEffect(() => {
         if (!products) return;
-        // Filter out Bangles from Shop page
-        let result = products;
+
+        // CRITICAL FIX: Show ALL products by default (including Bangles)
+        // User can manually filter by category if they want to exclude Bangles
+        let result = [...products];
 
         // Search Filter
         if (searchQuery) {
             result = result.filter(p =>
                 p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                p.category.toLowerCase().includes(searchQuery.toLowerCase())
+                (p.category && p.category.toLowerCase().includes(searchQuery.toLowerCase()))
             );
         }
 
         // Category Filter
+        // FIXED: Case-insensitive category matching
         if (selectedCategory !== 'All') {
-            result = result.filter(p => p.category === selectedCategory);
+            result = result.filter(p =>
+                p.category && p.category.toLowerCase() === selectedCategory.toLowerCase()
+            );
         }
 
         // Price Filter
@@ -100,7 +90,13 @@ const Shop = () => {
                 result.sort((a, b) => b.price - a.price);
                 break;
             case 'newest':
-                result.sort((a, b) => (b.isNewArrival === a.isNewArrival ? 0 : b.isNewArrival ? 1 : -1));
+                // FIXED: Sort by createdAt date if available, fallback to isNewArrival flag
+                result.sort((a, b) => {
+                    if (a.createdAt && b.createdAt) {
+                        return new Date(b.createdAt) - new Date(a.createdAt);
+                    }
+                    return (b.isNewArrival === a.isNewArrival ? 0 : b.isNewArrival ? 1 : -1);
+                });
                 break;
             default: // featured
                 break;

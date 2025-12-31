@@ -42,7 +42,7 @@ const ProductDetail = () => {
                 // Find related products
                 if (foundProduct && products.length > 0) {
                     const related = products
-                        .filter(p => p.category === foundProduct.category && p._id !== foundProduct._id)
+                        .filter(p => p.category === foundProduct.category && p.id !== foundProduct._id)
                         .slice(0, 4);
                     setRelatedProducts(related);
                 }

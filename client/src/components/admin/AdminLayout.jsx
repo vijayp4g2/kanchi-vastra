@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar';
-import { Bell, Search, User } from 'lucide-react';
+import { Bell, Search, Calendar } from 'lucide-react';
 
 const AdminLayout = () => {
     const location = useLocation();
@@ -10,71 +10,72 @@ const AdminLayout = () => {
     const getPageTitle = (path) => {
         const parts = path.split('/');
         const lastPart = parts[parts.length - 1];
-        if (lastPart === 'dashboard') return 'Overview';
-        return lastPart.charAt(0).toUpperCase() + lastPart.slice(1);
+        if (lastPart === 'admin') return 'Dashboard';
+
+        // Handle kebab-case
+        return lastPart
+            .split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
     }
 
     return (
-        <div className="flex min-h-screen bg-cream-50 font-sans">
+        <div className="flex min-h-screen bg-gray-50 font-sans">
             {/* Sidebar Component */}
             <AdminSidebar />
 
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Header / Top Bar */}
-                <header className="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-8 sticky top-0 z-10 shadow-sm">
+                <header className="h-20 bg-white border-b border-gray-200 flex items-center justify-between px-8 sticky top-0 z-40">
                     <div className="flex items-center gap-4">
-                        <h1 className="text-2xl font-serif text-maroon-900 font-bold">
+                        <h1 className="text-2xl font-serif text-zinc-900 font-bold tracking-tight">
                             {getPageTitle(location.pathname)}
                         </h1>
-                        <span className="h-6 w-[1px] bg-gray-200 hidden md:block"></span>
-                        <p className="text-gray-400 text-sm hidden md:block font-medium">
-                            Kanchi Vastra Administrative Control
-                        </p>
                     </div>
 
                     <div className="flex items-center gap-6">
-                        {/* Search Bar - Aesthetic Focus */}
-                        <div className="hidden lg:flex items-center bg-cream-50 rounded-xl px-4 py-2 border border-gray-100 group transition-all focus-within:ring-2 focus-within:ring-maroon-900/10 focus-within:border-maroon-900/20">
-                            <Search size={18} className="text-gray-400 group-focus-within:text-maroon-700 transition-colors" />
+                        {/* Search Bar - Clean */}
+                        <div className="hidden lg:flex items-center bg-gray-50 rounded-lg px-4 py-2.5 border border-gray-200 focus-within:ring-2 focus-within:ring-amber-500/10 focus-within:border-amber-500/50 transition-all w-80">
+                            <Search size={18} className="text-gray-400 mr-3" />
                             <input
                                 type="text"
-                                placeholder="Search products, orders..."
-                                className="bg-transparent border-none outline-none px-3 text-sm text-gray-700 w-64 placeholder:text-gray-400 font-medium"
+                                placeholder="Global Search..."
+                                className="bg-transparent border-none outline-none text-sm text-gray-700 w-full placeholder:text-gray-400 font-medium"
                             />
                         </div>
 
                         {/* Notifications */}
-                        <button className="relative p-2 text-gray-500 hover:text-maroon-700 hover:bg-cream-50 rounded-full transition-all group">
-                            <Bell size={22} />
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+                        <button className="relative p-2.5 text-gray-400 hover:text-zinc-900 hover:bg-gray-100 rounded-lg transition-all group">
+                            <Bell size={20} />
+                            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
                         </button>
 
                         <div className="h-8 w-[1px] bg-gray-200"></div>
 
-                        {/* Quick Action / Date Display */}
-                        <div className="flex flex-col items-end pr-2 text-right">
-                            <span className="text-sm font-bold text-maroon-900 leading-tight">
-                                {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                            </span>
-                            <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">System Online</span>
+                        {/* Date Display */}
+                        <div className="flex items-center gap-3 text-right">
+                            <div className="hidden md:block">
+                                <span className="block text-sm font-bold text-zinc-900 leading-none">
+                                    {new Date().toLocaleDateString('en-US', { weekday: 'long' })}
+                                </span>
+                                <span className="text-xs text-gray-500 font-medium">
+                                    {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                </span>
+                            </div>
+                            <div className="p-2 bg-zinc-100 rounded-lg text-zinc-500">
+                                <Calendar size={20} />
+                            </div>
                         </div>
                     </div>
                 </header>
 
                 {/* Main View Port */}
                 <main className="flex-1 p-8 lg:p-10 overflow-x-hidden">
-                    <div className="max-w-7xl mx-auto">
+                    <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <Outlet />
                     </div>
                 </main>
-
-                {/* Footer for Admin Panel */}
-                <footer className="px-8 py-6 border-t border-gray-100 text-center">
-                    <p className="text-gray-400 text-[10px] uppercase tracking-[0.3em] font-medium">
-                        &copy; {new Date().getFullYear()} Kanchi Vastra • Secure Enterprise Architecture
-                    </p>
-                </footer>
             </div>
         </div>
     );

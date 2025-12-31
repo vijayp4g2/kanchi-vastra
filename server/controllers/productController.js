@@ -21,6 +21,11 @@ const getProducts = asyncHandler(async (req, res) => {
     const category = req.query.category ? { category: req.query.category } : {};
     const newArrival = req.query.isNewArrival ? { isNewArrival: req.query.isNewArrival === 'true' } : {};
 
+    // Improved Filter Logic
+    let inStock = {};
+    if (req.query.inStock === 'true') inStock = { inStock: true };
+    else if (req.query.inStock === 'false') inStock = { inStock: false };
+
     // Sort logic
     let sort = {};
     if (req.query.sort) {
@@ -35,8 +40,8 @@ const getProducts = asyncHandler(async (req, res) => {
         sort = { createdAt: -1 }; // Default to newest
     }
 
-    const count = await Product.countDocuments({ ...keyword, ...category, ...newArrival });
-    const products = await Product.find({ ...keyword, ...category, ...newArrival })
+    const count = await Product.countDocuments({ ...keyword, ...category, ...newArrival, ...inStock });
+    const products = await Product.find({ ...keyword, ...category, ...newArrival, ...inStock })
         .sort(sort)
         .limit(pageSize)
         .skip(pageSize * (page - 1));

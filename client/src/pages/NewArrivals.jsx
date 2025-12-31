@@ -28,8 +28,9 @@ const NewArrivals = () => {
 
     useEffect(() => {
         if (products) {
-            // Filter out Bangles and only show new sarees
-            const newProducts = products.filter(product => product.isNewArrival && product.category !== 'Bangles');
+            // CRITICAL FIX: Show ALL new arrivals (including Bangles)
+            // Filter only by isNewArrival flag, not by category
+            const newProducts = products.filter(product => product.isNewArrival);
             setNewArrivals(newProducts);
             setSortedProducts(newProducts);
         }

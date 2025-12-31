@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
     Plus,
-    Edit,
+    Edit2,
     Trash2,
-    LayoutGrid,
+    Search,
+    Layers,
     CheckCircle2,
     XCircle,
-    GripVertical,
     Save,
     X,
+    FolderOpen,
     Loader
 } from 'lucide-react';
 import api from '../../utils/api';
@@ -18,20 +19,31 @@ import { useToast } from '../../context/ToastContext';
 const CategoryList = () => {
     const { user } = useAuth();
     const { addToast } = useToast();
+
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
 
-    const [isAdding, setIsAdding] = useState(false);
-    const [newCategoryName, setNewCategoryName] = useState('');
-    const [editingId, setEditingId] = useState(null);
-    const [editName, setEditName] = useState('');
+    // Editing / Creating State
+    const [isEditing, setIsEditing] = useState(false);
+    const [editId, setEditId] = useState(null);
+    const [formData, setFormData] = useState({
+        name: '',
+        description: '',
+        isActive: true
+    });
 
     const fetchCategories = async () => {
         try {
             setLoading(true);
             const data = await api.getCategories();
-            setCategories(data);
+            if (Array.isArray(data)) {
+                setCategories(data);
+            } else {
+                setCategories(data.categories || []);
+            }
         } catch (error) {
+            console.error(error);
             addToast('Failed to load categories', 'error');
         } finally {
             setLoading(false);
@@ -42,233 +54,217 @@ const CategoryList = () => {
         fetchCategories();
     }, []);
 
-    const toggleStatus = async (category) => {
+    const handleSave = async (e) => {
+        e.preventDefault();
         try {
-            const updated = await api.updateCategory(category.id, {
-                isActive: !category.isActive
-            }, user.token);
-
-            setCategories(categories.map(cat =>
-                cat.id === category.id ? { ...cat, isActive: updated.isActive } : cat
-            ));
-            addToast(`Category ${updated.isActive ? 'enabled' : 'disabled'}`, 'success');
+            if (isEditing && editId) {
+                await api.updateCategory(editId, formData, user.token);
+                addToast('Category updated successfully', 'success');
+            } else {
+                await api.createCategory(formData, user.token);
+                addToast('Category created successfully', 'success');
+            }
+            resetForm();
+            fetchCategories();
         } catch (error) {
-            addToast('Failed to update status', 'error');
-        }
-    };
-
-    const handleAdd = async () => {
-        if (!newCategoryName.trim()) return;
-
-        try {
-            const newCat = await api.createCategory({
-                name: newCategoryName
-            }, user.token);
-
-            setCategories([newCat, ...categories]);
-            setNewCategoryName('');
-            setIsAdding(false);
-            addToast('Category added successfully', 'success');
-        } catch (error) {
-            addToast(error.message || 'Failed to add category', 'error');
+            addToast(error.message || 'Operation failed', 'error');
         }
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this category?')) return;
-
-        try {
-            await api.deleteCategory(id, user.token);
-            setCategories(categories.filter(cat => cat.id !== id));
-            addToast('Category deleted successfully', 'success');
-        } catch (error) {
-            addToast(error.message || 'Failed to delete category', 'error');
+        if (window.confirm('Are you sure you want to delete this category?')) {
+            try {
+                await api.deleteCategory(id, user.token);
+                addToast('Category deleted successfully', 'success');
+                setCategories(prev => prev.filter(c => c._id !== id && c.id !== id));
+            } catch (error) {
+                addToast('Failed to delete category', 'error');
+            }
         }
     };
 
     const startEdit = (category) => {
-        setEditingId(category.id);
-        setEditName(category.name);
+        setFormData({
+            name: category.name,
+            description: category.description || '',
+            isActive: category.isActive !== undefined ? category.isActive : true
+        });
+        setEditId(category._id || category.id);
+        setIsEditing(true);
     };
 
-    const saveEdit = async () => {
-        if (!editName.trim()) return;
-
-        try {
-            const updated = await api.updateCategory(editingId, {
-                name: editName
-            }, user.token);
-
-            setCategories(categories.map(cat =>
-                cat.id === editingId ? { ...cat, name: updated.name } : cat
-            ));
-            setEditingId(null);
-            setEditName('');
-            addToast('Category updated successfully', 'success');
-        } catch (error) {
-            addToast(error.message || 'Failed to update category', 'error');
-        }
+    const resetForm = () => {
+        setFormData({ name: '', description: '', isActive: true });
+        setIsEditing(false);
+        setEditId(null);
     };
 
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center h-64">
-                <Loader className="animate-spin text-maroon-900" size={32} />
-            </div>
-        );
-    }
+    const filteredCategories = categories.filter(c =>
+        c.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
-        <div className="space-y-8 animate-fadeIn max-w-4xl mx-auto">
-            {/* Header Section */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h3 className="text-xl font-serif font-bold text-maroon-900">Collection Management</h3>
-                    <p className="text-sm text-gray-400 font-medium">Define and organize your store's saree categories</p>
-                </div>
-                {!isAdding && !editingId && (
-                    <button
-                        onClick={() => setIsAdding(true)}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-maroon-900 text-gold-200 rounded-xl font-bold text-sm hover:bg-maroon-800 transition-all shadow-lg shadow-maroon-900/10"
-                    >
-                        <Plus size={18} />
-                        Add Category
-                    </button>
-                )}
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start animate-fadeIn">
 
-            {/* In-Line Add Form */}
-            {isAdding && (
-                <div className="bg-white p-6 rounded-2xl border-2 border-dashed border-maroon-100 flex items-center gap-4 animate-slideDown">
-                    <div className="flex-1 relative">
-                        <LayoutGrid className="absolute left-3 top-1/2 -translate-y-1/2 text-maroon-300" size={18} />
+            {/* Left Column: List */}
+            <div className="lg:col-span-2 space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 className="text-xl font-bold text-zinc-900">Categories</h2>
+                        <p className="text-sm text-zinc-500">Manage your product classifications</p>
+                    </div>
+                    <div className="relative w-full sm:w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                         <input
                             type="text"
-                            placeholder="Enter category name (e.g., Banarasi, Pattu...)"
-                            className="w-full pl-10 pr-4 py-3 bg-cream-50/50 border border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-maroon-900/10 focus:border-maroon-900/20 outline-none transition-all font-medium"
-                            value={newCategoryName}
-                            onChange={(e) => setNewCategoryName(e.target.value)}
-                            autoFocus
-                            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                            placeholder="Search categories..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 outline-none transition-all"
                         />
                     </div>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={handleAdd}
-                            className="p-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all shadow-md shadow-green-600/10"
-                            title="Save Category"
-                        >
-                            <Save size={20} />
-                        </button>
-                        <button
-                            onClick={() => setIsAdding(false)}
-                            className="p-3 bg-gray-100 text-gray-500 rounded-xl hover:bg-gray-200 transition-all"
-                            title="Cancel"
-                        >
-                            <X size={20} />
-                        </button>
-                    </div>
                 </div>
-            )}
 
-            {/* Category Cards / List */}
-            <div className="grid gap-4">
-                {categories.length === 0 ? (
-                    <div className="text-center py-12 text-gray-400">
-                        <p>No categories found. Add one to get started!</p>
+                {loading ? (
+                    <div className="h-64 flex flex-col items-center justify-center text-zinc-400 animate-pulse">
+                        <div className="w-10 h-10 border-4 border-zinc-200 border-t-zinc-900 rounded-full animate-spin mb-4"></div>
+                        <p className="text-sm font-medium">Loading categories...</p>
+                    </div>
+                ) : filteredCategories.length === 0 ? (
+                    <div className="bg-white rounded-xl border border-dashed border-gray-200 p-12 text-center">
+                        <FolderOpen size={48} className="mx-auto text-gray-300 mb-4" />
+                        <h3 className="text-zinc-900 font-bold mb-1">No categories found</h3>
+                        <p className="text-zinc-500 text-sm">Create a new category to get started.</p>
                     </div>
                 ) : (
-                    categories.map((cat) => (
-                        <div
-                            key={cat.id}
-                            className={`bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between group hover:border-maroon-100 hover:shadow-md transition-all duration-300 ${!cat.isActive ? 'opacity-70 grayscale-[0.5]' : ''}`}
-                        >
-                            {editingId === cat.id ? (
-                                // Edit Mode
-                                <div className="flex-1 flex items-center gap-4">
-                                    <div className="flex-1 relative">
-                                        <input
-                                            type="text"
-                                            value={editName}
-                                            onChange={(e) => setEditName(e.target.value)}
-                                            className="w-full px-4 py-2 bg-cream-50/50 border border-maroon-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-maroon-900/10"
-                                            autoFocus
-                                            onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
-                                        />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {filteredCategories.map(item => (
+                            <div key={item._id || item.id} className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-amber-500/30 hover:shadow-lg hover:shadow-zinc-100 transition-all flex flex-col justify-between h-full">
+                                <div>
+                                    <div className="flex items-start justify-between mb-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2.5 bg-zinc-50 rounded-lg text-zinc-500 group-hover:bg-amber-50 group-hover:text-amber-600 transition-colors">
+                                                <Layers size={20} />
+                                            </div>
+                                            <h3 className="font-bold text-zinc-900 text-lg">{item.name}</h3>
+                                        </div>
+                                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${item.isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-gray-50 text-gray-500 border-gray-100'}`}>
+                                            {item.isActive ? 'Active' : 'Inactive'}
+                                        </span>
                                     </div>
-                                    <button onClick={saveEdit} className="p-2 text-green-600 hover:bg-green-50 rounded-lg">
-                                        <Save size={18} />
+                                    <p className="text-sm text-zinc-500 line-clamp-2 min-h-[2.5rem] mb-2 leading-relaxed">
+                                        {item.description || 'No description provided.'}
+                                    </p>
+                                    <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4">
+                                        ID: {(item._id || item.id).substring(0, 8)}...
+                                    </div>
+                                </div>
+
+                                <div className="pt-4 border-t border-gray-50 flex items-center justify-end gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                        onClick={() => startEdit(item)}
+                                        className="p-2 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-all"
+                                        title="Edit"
+                                    >
+                                        <Edit2 size={18} />
                                     </button>
-                                    <button onClick={() => setEditingId(null)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg">
-                                        <X size={18} />
+                                    <button
+                                        onClick={() => handleDelete(item._id || item.id)}
+                                        className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                        title="Delete"
+                                    >
+                                        <Trash2 size={18} />
                                     </button>
                                 </div>
-                            ) : (
-                                // View Mode
-                                <>
-                                    <div className="flex items-center gap-5">
-                                        <div className="text-gray-300 cursor-grab active:cursor-grabbing hover:text-maroon-400 transition-colors">
-                                            <GripVertical size={20} />
-                                        </div>
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${cat.isActive ? 'bg-maroon-50 text-maroon-700' : 'bg-gray-100 text-gray-400'}`}>
-                                            <LayoutGrid size={24} />
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold text-gray-800 text-lg flex items-center gap-2">
-                                                {cat.name}
-                                                {!cat.isActive && (
-                                                    <span className="text-[10px] bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full uppercase tracking-tighter">Disabled</span>
-                                                )}
-                                            </h4>
-                                            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">{cat.productCount || 0} Products</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-3">
-                                        {/* Toggle Status */}
-                                        <button
-                                            onClick={() => toggleStatus(cat)}
-                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-bold text-[10px] uppercase tracking-wider transition-all border ${cat.isActive
-                                                ? 'bg-green-50 text-green-700 border-green-100 hover:bg-green-100'
-                                                : 'bg-red-50 text-red-700 border-red-100 hover:bg-red-100'
-                                                }`}
-                                        >
-                                            {cat.isActive ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-                                            {cat.isActive ? 'Enabled' : 'Disabled'}
-                                        </button>
-
-                                        <div className="w-[1px] h-6 bg-gray-100"></div>
-
-                                        {/* Actions */}
-                                        <button
-                                            onClick={() => startEdit(cat)}
-                                            className="p-2 text-gray-400 hover:text-maroon-900 hover:bg-maroon-50 rounded-lg transition-all"
-                                        >
-                                            <Edit size={18} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(cat.id)}
-                                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    ))
+                            </div>
+                        ))}
+                    </div>
                 )}
             </div>
 
-            {/* Help / Tip Alert */}
-            <div className="bg-gold-50/50 border border-gold-100 p-4 rounded-xl flex gap-3 items-start">
-                <div className="p-1.5 bg-gold-400 rounded-lg text-white">
-                    <CheckCircle2 size={16} />
+            {/* Right Column: Form */}
+            <div className="lg:col-span-1">
+                <div className="bg-white rounded-xl shadow-xl shadow-zinc-200/50 border border-gray-200 overflow-hidden sticky top-6">
+                    <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+                        <h3 className="font-bold text-zinc-900 flex items-center gap-2">
+                            {isEditing ? <Edit2 size={16} /> : <Plus size={16} />}
+                            {isEditing ? 'Edit Category' : 'Add Category'}
+                        </h3>
+                        {isEditing && (
+                            <button onClick={resetForm} className="text-xs font-bold text-red-500 hover:bg-red-50 px-2 py-1 rounded transition-colors">
+                                Cancel
+                            </button>
+                        )}
+                    </div>
+
+                    <form onSubmit={handleSave} className="p-6 space-y-5">
+                        <div className="space-y-1.5">
+                            <label className="block text-xs font-bold text-zinc-500 uppercase">Category Name</label>
+                            <input
+                                type="text"
+                                value={formData.name}
+                                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                placeholder="e.g. Wedding Silk"
+                                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10 outline-none transition-all font-medium text-sm text-zinc-900"
+                                required
+                            />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="block text-xs font-bold text-zinc-500 uppercase">Description</label>
+                            <textarea
+                                value={formData.description}
+                                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                placeholder="Brief description of this collection..."
+                                rows="4"
+                                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10 outline-none transition-all font-medium text-sm text-zinc-900 resize-none"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="block text-xs font-bold text-zinc-500 uppercase">Visibility</label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, isActive: true }))}
+                                    className={`py-2 rounded-lg text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${formData.isActive ? 'bg-emerald-50 border-emerald-200 text-emerald-700 shadow-sm' : 'bg-white border-gray-200 text-gray-400 hover:bg-gray-50'}`}
+                                >
+                                    <CheckCircle2 size={14} /> Active
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, isActive: false }))}
+                                    className={`py-2 rounded-lg text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${!formData.isActive ? 'bg-rose-50 border-rose-200 text-rose-700 shadow-sm' : 'bg-white border-gray-200 text-gray-400 hover:bg-gray-50'}`}
+                                >
+                                    <XCircle size={14} /> Inactive
+                                </button>
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            className="w-full py-3 bg-zinc-900 text-white rounded-lg font-bold text-sm shadow-lg shadow-zinc-900/20 hover:bg-zinc-800 transform active:scale-95 transition-all flex items-center justify-center gap-2 mt-4"
+                        >
+                            {isEditing ? <Save size={18} /> : <Plus size={18} />}
+                            {isEditing ? 'Update Category' : 'Create Category'}
+                        </button>
+                    </form>
                 </div>
-                <p className="text-xs text-gold-900 font-medium leading-relaxed">
-                    <span className="font-bold">Pro Tip:</span> Disabled categories will be hidden from the website's navigation and filters, but the products within them will remain in the database.
-                </p>
+
+                {/* Tip Box */}
+                <div className="mt-6 bg-amber-50 border border-amber-100 p-4 rounded-xl flex gap-3 items-start">
+                    <div className="p-1.5 bg-amber-100 text-amber-600 rounded-lg shrink-0">
+                        <FolderOpen size={16} />
+                    </div>
+                    <div className="space-y-1">
+                        <h4 className="text-xs font-bold text-amber-900 uppercase tracking-wider">Pro Tip</h4>
+                        <p className="text-xs text-amber-800 leading-relaxed">
+                            Organizing products into clear categories helps customers find what they speed. Inactive categories are hidden from the store but safe in the database.
+                        </p>
+                    </div>
+                </div>
             </div>
+
         </div>
     );
 };

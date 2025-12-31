@@ -1,22 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Search,
     Plus,
     Filter,
-    Edit,
+    Edit2,
     Trash2,
-    Eye,
+    LayoutGrid,
+    List,
+    Search,
     ChevronLeft,
     ChevronRight,
     ArrowUpDown,
-    Loader,
-    Package,
-    X,
-    LayoutGrid,
-    List,
-    MoreVertical,
-    CheckCircle,
-    AlertCircle
+    CheckCircle2,
+    AlertCircle,
+    PackageX,
+    MoreHorizontal
 } from 'lucide-react';
 import ProductForm from './ProductForm';
 import api from '../../utils/api';
@@ -30,12 +27,11 @@ const ProductList = ({ initialCategory = '', filterNewArrivals = false }) => {
     // Core Data States
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [viewMode, setViewMode] = useState('list'); // 'grid' or 'list'
+    const [viewMode, setViewMode] = useState('grid');
 
     // Actions & UI States
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
-    const [activeActionId, setActiveActionId] = useState(null); // For mobile dropdowns if needed
 
     // Filter & Search States
     const [searchQuery, setSearchQuery] = useState('');
@@ -44,14 +40,10 @@ const ProductList = ({ initialCategory = '', filterNewArrivals = false }) => {
     const [total, setTotal] = useState(0);
     const [sortBy, setSortBy] = useState('newest');
     const [categoryFilter, setCategoryFilter] = useState(initialCategory);
-    const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+    const [stockFilter, setStockFilter] = useState('all');
 
     // Derived Constants
     const isBangles = initialCategory === 'Bangles';
-    const itemTypeLabel = isBangles ? 'Bangle' : (filterNewArrivals ? 'Item' : 'Saree');
-    const itemTypeLabelPlural = isBangles ? 'Bangles' : (filterNewArrivals ? 'New Arrivals' : 'Sarees');
-
-    // Categories List
     const categories = isBangles
         ? ['Bangles']
         : ['Wedding', 'Kanchipuram', 'Festival', 'Casual', 'Modern'];
@@ -67,24 +59,20 @@ const ProductList = ({ initialCategory = '', filterNewArrivals = false }) => {
             const params = {
                 keyword: searchQuery,
                 pageNumber: page,
-                pageSize: viewMode === 'grid' ? 12 : 10, // Slightly more for grid
+                // CRITICAL FIX: Increased pageSize to show all products in admin
+                // Grid and list view now show complete inventory
+                pageSize: 1000,  // Changed from 12/10 to 1000 to display all products
                 sort: sortBy,
-                category: categoryFilter
+                category: categoryFilter,
+                inStock: stockFilter === 'all' ? undefined : stockFilter
             };
 
-            // Handle specific logic for Bangles vs General Products page
-            if (isBangles) {
-                params.category = 'Bangles';
-            }
-            if (filterNewArrivals) {
-                params.isNewArrival = true;
-            }
+            if (isBangles) params.category = 'Bangles';
+            if (filterNewArrivals) params.isNewArrival = true;
 
             const data = await api.getProducts(params);
             let filteredProducts = data.products || [];
 
-            // Client-side filtering to exclude Bangles from the general Saree list if not strictly filtered
-            // Only apply this exclusion if we are NOT in Bangles mode, NOT in New Arrivals mode, and NO category filter is set
             if (!isBangles && !filterNewArrivals && !categoryFilter) {
                 filteredProducts = filteredProducts.filter(p => p.category !== 'Bangles');
             }
@@ -94,7 +82,7 @@ const ProductList = ({ initialCategory = '', filterNewArrivals = false }) => {
             setTotal(data.total || 0);
         } catch (error) {
             console.error(error);
-            addToast(`Failed to load ${itemTypeLabelPlural.toLowerCase()}`, 'error');
+            addToast('Failed to load inventory', 'error');
         } finally {
             setLoading(false);
         }
@@ -102,9 +90,8 @@ const ProductList = ({ initialCategory = '', filterNewArrivals = false }) => {
 
     useEffect(() => {
         fetchProducts();
-    }, [page, sortBy, categoryFilter, initialCategory, filterNewArrivals, viewMode]);
+    }, [page, sortBy, categoryFilter, initialCategory, filterNewArrivals, stockFilter]);
 
-    // Search Debounce using Effect
     useEffect(() => {
         const timeout = setTimeout(() => {
             if (page !== 1) setPage(1);
@@ -116,11 +103,10 @@ const ProductList = ({ initialCategory = '', filterNewArrivals = false }) => {
     // Handlers
     const handleDelete = async (id, e) => {
         e.stopPropagation();
-        if (window.confirm(`Are you sure you want to delete this ${itemTypeLabel.toLowerCase()}? This action cannot be undone.`)) {
+        if (window.confirm('Are you sure you want to permanently delete this item?')) {
             try {
                 await api.deleteProduct(id, user.token);
-                addToast(`${itemTypeLabel} deleted successfully`, 'success');
-                // Optimistic update or refetch
+                addToast('Item deleted successfully', 'success');
                 setProducts(prev => prev.filter(p => p.id !== id));
                 setTotal(prev => prev - 1);
             } catch (error) {
@@ -141,343 +127,317 @@ const ProductList = ({ initialCategory = '', filterNewArrivals = false }) => {
         fetchProducts();
     };
 
-    // --- Sub-Components for this page ---
-
+    // Components
     const StatusBadge = ({ inStock }) => (
-        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${inStock
-            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-            : 'bg-rose-50 text-rose-700 border border-rose-100'
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${inStock
+            ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+            : 'bg-rose-50 text-rose-700 border-rose-100'
             }`}>
-            {inStock ? <CheckCircle size={10} /> : <AlertCircle size={10} />}
-            {inStock ? 'In Stock' : 'Out of Stock'}
+            {inStock ? <CheckCircle2 size={10} /> : <AlertCircle size={10} />}
+            {inStock ? 'Stock' : 'Out'}
         </span>
     );
 
-    const CategoryBadge = ({ category }) => (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-bold text-gray-500 bg-gray-100 uppercase tracking-wider group-hover:bg-white/80 transition-colors">
-            {category}
-        </span>
-    );
-
-    const GridItem = ({ product }) => (
-        <div className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-maroon-900/5 hover:border-maroon-100 transition-all duration-300 flex flex-col h-full">
-            <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
+    const ProductCard = ({ product }) => (
+        <div
+            onClick={(e) => handleEdit(product, e)}
+            className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl hover:shadow-zinc-200/50 hover:border-amber-500/30 transition-all duration-300 cursor-pointer flex flex-col h-full relative"
+        >
+            {/* Image Area */}
+            <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
                 <img
                     src={product.image || 'https://via.placeholder.com/300?text=No+Image'}
                     alt={product.name}
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
                 />
 
-                {/* Overlay Actions */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
-                    <button
-                        onClick={(e) => handleEdit(product, e)}
-                        className="p-3 bg-white text-maroon-900 rounded-full hover:bg-maroon-50 transition-colors transform hover:scale-110"
-                        title="Edit"
-                    >
-                        <Edit size={18} />
-                    </button>
-                    <button
-                        onClick={(e) => handleDelete(product.id, e)}
-                        className="p-3 bg-white text-rose-600 rounded-full hover:bg-rose-50 transition-colors transform hover:scale-110"
-                        title="Delete"
-                    >
-                        <Trash2 size={18} />
-                    </button>
-                </div>
-
-                {/* Badges */}
-                <div className="absolute top-3 left-3 flex flex-col gap-2">
+                <div className="absolute top-3 left-3 flex flex-col gap-1.5">
                     <StatusBadge inStock={product.inStock} />
                     {product.featured && (
-                        <span className="px-2 py-1 bg-gold-400 text-white text-[10px] font-bold uppercase tracking-wider rounded shadow-sm">
+                        <span className="px-2 py-1 bg-amber-400 text-white text-[10px] font-bold uppercase tracking-wider rounded-md shadow-sm border border-amber-500">
                             Featured
                         </span>
                     )}
                 </div>
+
+                {/* Hover Overlay Actions */}
+                <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-between">
+                    <span className="text-white text-xs font-bold bg-white/20 backdrop-blur-md px-2 py-1 rounded">
+                        ID: {product.id.substring(0, 6)}
+                    </span>
+                    <button
+                        onClick={(e) => handleDelete(product.id, e)}
+                        className="p-2 bg-white text-red-600 rounded-full hover:bg-red-500 hover:text-white transition-all transform hover:scale-110 shadow-lg"
+                    >
+                        <Trash2 size={14} />
+                    </button>
+                </div>
             </div>
 
-            <div className="p-5 flex flex-col flex-grow">
-                <div className="mb-2">
-                    <CategoryBadge category={product.category} />
+            {/* Info Area */}
+            <div className="p-4 flex flex-col flex-1">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{product.category}</span>
+                    <span className="font-serif font-bold text-zinc-900">₹{product.price.toLocaleString()}</span>
                 </div>
-                <h3 className="font-serif text-lg font-bold text-gray-900 leading-tight mb-2 line-clamp-2" title={product.name}>
+                <h3 className="font-medium text-sm text-zinc-700 line-clamp-2 leading-relaxed mb-4 flex-1">
                     {product.name}
                 </h3>
-                <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between">
-                    <span className="font-bold text-maroon-900 text-lg">₹{product.price.toLocaleString()}</span>
-                    <span className="text-xs text-gray-400 font-medium">ID: {product.id.substring(0, 6)}...</span>
+
+                <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
+                    <span>Added {new Date().toLocaleDateString()}</span>
+                    <span className="font-medium text-amber-600 group-hover:underline">Edit Details &rarr;</span>
                 </div>
             </div>
         </div>
     );
 
-    const ListItem = ({ product }) => (
-        <tr className="group hover:bg-gray-50/50 transition-colors border-b border-gray-50 last:border-0">
-            <td className="px-6 py-4">
-                <div className="flex items-center gap-4">
-                    <div className="w-16 h-20 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 relative group-hover:shadow-md transition-all">
-                        <img
-                            src={product.image || 'https://via.placeholder.com/150'}
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                        />
-                    </div>
-                    <div>
-                        <h4 className="font-bold text-gray-900 mb-1 group-hover:text-maroon-900 transition-colors">{product.name}</h4>
-                        <div className="flex items-center gap-2">
-                            {product.featured && <span className="text-[10px] font-bold text-gold-600 uppercase tracking-wider">• Featured</span>}
-                            <span className="text-[10px] text-gray-400 uppercase tracking-wider">ID: {product.id}</span>
-                        </div>
-                    </div>
+    const ProductListItem = ({ product }) => (
+        <div
+            onClick={(e) => handleEdit(product, e)}
+            className="group flex items-center gap-4 p-3 bg-white border border-gray-100 rounded-xl hover:border-amber-500/30 hover:shadow-lg hover:shadow-zinc-100 transition-all cursor-pointer mb-3"
+        >
+            <div className="w-16 h-20 bg-gray-100 rounded-lg overflow-hidden shrink-0">
+                <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                />
+            </div>
+
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">{product.category}</span>
+                    {product.featured && <span className="text-[10px] text-amber-500 font-bold">• Featured</span>}
                 </div>
-            </td>
-            <td className="px-6 py-4">
-                <CategoryBadge category={product.category} />
-            </td>
-            <td className="px-6 py-4">
-                <div className="font-bold text-gray-900">₹{product.price.toLocaleString()}</div>
-            </td>
-            <td className="px-6 py-4">
+                <h3 className="font-medium text-zinc-900 truncate">{product.name}</h3>
+                <p className="text-xs text-zinc-400">ID: {product.id}</p>
+            </div>
+
+            <div className="text-right px-4">
+                <span className="block font-serif font-bold text-zinc-900">₹{product.price.toLocaleString()}</span>
+            </div>
+
+            <div className="px-4">
                 <StatusBadge inStock={product.inStock} />
-            </td>
-            <td className="px-6 py-4 text-right">
-                <div className="flex items-center justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                    <button
-                        onClick={(e) => handleEdit(product, e)}
-                        className="p-2 text-gray-400 hover:text-maroon-700 hover:bg-maroon-50 rounded-lg transition-all"
-                    >
-                        <Edit size={18} />
-                    </button>
-                    <button
-                        onClick={(e) => handleDelete(product.id, e)}
-                        className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-                    >
-                        <Trash2 size={18} />
-                    </button>
-                </div>
-            </td>
-        </tr>
+            </div>
+
+            <div className="flex items-center gap-2 px-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                <button
+                    onClick={(e) => handleEdit(product, e)}
+                    className="p-2 hover:bg-zinc-100 rounded-lg text-zinc-500 hover:text-zinc-900 transition-colors"
+                >
+                    <Edit2 size={16} />
+                </button>
+                <button
+                    onClick={(e) => handleDelete(product.id, e)}
+                    className="p-2 hover:bg-red-50 rounded-lg text-zinc-400 hover:text-red-500 transition-colors"
+                >
+                    <Trash2 size={16} />
+                </button>
+            </div>
+        </div>
     );
 
     return (
-        <div className="min-h-screen bg-gray-50/30 pb-20 animate-fadeIn">
-            {/* --- Top Header Section --- */}
-            <div className="bg-white border-b border-gray-100 sticky top-0 z-30 px-6 py-4 shadow-sm/50 backdrop-blur-md bg-white/90">
-                <div className="max-w-7xl mx-auto">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
-                            <h1 className="text-2xl font-serif font-bold text-maroon-900 flex items-center gap-3">
-                                {filterNewArrivals ? 'New Arrivals' : (isBangles ? 'Bangles Collection' : 'Premium Sarees')}
-                                <span className="px-3 py-1 bg-maroon-50 rounded-full text-xs font-sans font-bold text-maroon-600 tracking-wider uppercase">
-                                    Admin
-                                </span>
-                            </h1>
-                            <p className="text-gray-500 text-sm mt-1">
-                                Manage your exclusive {itemTypeLabel.toLowerCase()} inventory
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={() => setIsFormOpen(true)}
-                                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-maroon-900 to-maroon-800 text-white rounded-xl font-bold text-sm shadow-lg shadow-maroon-900/20 hover:shadow-maroon-900/30 hover:to-maroon-700 transform hover:-translate-y-0.5 transition-all"
-                            >
-                                <Plus size={18} strokeWidth={2.5} />
-                                Add New {itemTypeLabel}
-                            </button>
+        <div className="space-y-6">
+            {/* Dashboard Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-1">Total Inventory</p>
+                        <h3 className="text-2xl font-serif font-bold text-zinc-900">{total}</h3>
+                    </div>
+                    <div className="p-3 bg-zinc-100 rounded-lg text-zinc-600">
+                        <LayoutGrid size={20} />
+                    </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-1">Active Filters</p>
+                        <div className="flex gap-2">
+                            {(categoryFilter || stockFilter !== 'all' || searchQuery) ? (
+                                <>
+                                    {stockFilter !== 'all' && <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-md font-medium">{stockFilter === 'true' ? 'In Stock' : 'Out of Stock'}</span>}
+                                    {categoryFilter && <span className="text-xs bg-zinc-100 text-zinc-800 px-2 py-1 rounded-md font-medium">{categoryFilter}</span>}
+                                    {searchQuery && <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-md font-medium">Search</span>}
+                                </>
+                            ) : (
+                                <span className="text-sm font-medium text-zinc-400">None</span>
+                            )}
                         </div>
                     </div>
+                    <div className="p-3 bg-amber-50 rounded-lg text-amber-600">
+                        <Filter size={20} />
+                    </div>
+                </div>
 
-                    {/* --- Controls Toolbar --- */}
-                    <div className="mt-6 flex flex-col lg:flex-row lg:items-center gap-4">
-                        {/* Search */}
-                        <div className="relative flex-grow max-w-md">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                            <input
-                                type="text"
-                                placeholder={`Search ${itemTypeLabelPlural.toLowerCase()}...`}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-transparent focus:bg-white focus:border-maroon-100 focus:ring-4 focus:ring-maroon-50 rounded-xl text-sm font-medium transition-all outline-none placeholder:text-gray-400"
-                            />
-                        </div>
-
-                        {/* Filters & Actions Group */}
-                        <div className="flex items-center gap-3 flex-wrap">
-                            {/* Sort */}
-                            <div className="relative group">
-                                <select
-                                    value={sortBy}
-                                    onChange={(e) => setSortBy(e.target.value)}
-                                    className="appearance-none pl-4 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:outline-none hover:border-maroon-200 transition-colors cursor-pointer shadow-sm"
-                                >
-                                    <option value="newest">Newest First</option>
-                                    <option value="oldest">Oldest First</option>
-                                    <option value="price_asc">Price: Low to High</option>
-                                    <option value="price_desc">Price: High to Low</option>
-                                </select>
-                                <ArrowUpDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                            </div>
-
-                            {/* Category Filter Dropdown */}
-                            <div className="relative">
-                                <button
-                                    onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
-                                    className={`flex items-center gap-2 px-4 py-2.5 border rounded-xl text-sm font-bold transition-all shadow-sm ${categoryFilter
-                                        ? 'bg-maroon-50 border-maroon-200 text-maroon-800'
-                                        : 'bg-white border-gray-200 text-gray-600 hover:border-maroon-200'
-                                        }`}
-                                >
-                                    <Filter size={16} />
-                                    {categoryFilter || 'All Categories'}
-                                    {isFilterDropdownOpen ? <X size={14} /> : null}
-                                </button>
-
-                                {isFilterDropdownOpen && (
-                                    <>
-                                        <div className="fixed inset-0 z-10" onClick={() => setIsFilterDropdownOpen(false)}></div>
-                                        <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-20 py-2 animate-in fade-in zoom-in-95 duration-200">
-                                            <button
-                                                onClick={() => { setCategoryFilter(''); setIsFilterDropdownOpen(false); }}
-                                                className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors ${!categoryFilter ? 'font-bold text-maroon-900 bg-maroon-50/50' : 'text-gray-600'}`}
-                                            >
-                                                All Categories
-                                            </button>
-                                            {categories.map(cat => (
-                                                <button
-                                                    key={cat}
-                                                    onClick={() => { setCategoryFilter(cat); setIsFilterDropdownOpen(false); }}
-                                                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors ${categoryFilter === cat ? 'font-bold text-maroon-900 bg-maroon-50/50' : 'text-gray-600'}`}
-                                                >
-                                                    {cat}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-
-                            <div className="w-px h-8 bg-gray-200 mx-1"></div>
-
-                            {/* View Toggle */}
-                            <div className="flex bg-gray-100 p-1 rounded-xl">
-                                <button
-                                    onClick={() => setViewMode('list')}
-                                    className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white text-maroon-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
-                                >
-                                    <List size={18} />
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('grid')}
-                                    className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white text-maroon-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
-                                >
-                                    <LayoutGrid size={18} />
-                                </button>
-                            </div>
-                        </div>
+                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-1">Quick Actions</p>
+                        <button
+                            onClick={() => setIsFormOpen(true)}
+                            className="text-sm font-bold text-amber-600 hover:text-amber-700 hover:underline"
+                        >
+                            + Add New Item
+                        </button>
+                    </div>
+                    <div className="p-3 bg-green-50 rounded-lg text-emerald-600">
+                        <Plus size={20} />
                     </div>
                 </div>
             </div>
 
-            {/* --- Main Content Area --- */}
-            <div className="max-w-7xl mx-auto px-6 py-8">
-                {/* Stats Summary - Optional but nice */}
-                {!loading && (
-                    <div className="mb-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4">
-                            <div className="p-3 bg-maroon-50 text-maroon-600 rounded-lg">
-                                <Package size={20} />
-                            </div>
-                            <div>
-                                <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Items</p>
-                                <p className="text-2xl font-serif font-bold text-gray-900">{total}</p>
-                            </div>
-                        </div>
-                        {/* Can add more stats here easily */}
-                    </div>
-                )}
+            {/* Toolbar */}
+            <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-widest">
+                        {isBangles ? 'Bangles' : 'Sarees'} List
+                    </h2>
+                    <span className="px-2 py-0.5 bg-zinc-100 text-zinc-600 text-[10px] font-bold rounded-full">{total}</span>
+                </div>
 
-                {loading ? (
-                    <div className="flex flex-col items-center justify-center py-32 text-gray-400">
-                        <Loader className="animate-spin text-maroon-900 mb-4" size={40} />
-                        <p className="font-medium text-lg">Loading your collection...</p>
+                <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+                    {/* Search */}
+                    <div className="relative flex-1 sm:w-56">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                        <input
+                            type="text"
+                            placeholder="Search by name..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-transparent focus:bg-white focus:border-amber-500/50 rounded-lg text-sm focus:ring-2 focus:ring-amber-500/10 outline-none transition-all"
+                        />
                     </div>
-                ) : products.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-32 bg-white rounded-3xl border border-gray-100 border-dashed">
-                        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
-                            <Package size={32} className="text-gray-300" />
-                        </div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">No {itemTypeLabelPlural.toLowerCase()} found</h3>
-                        <p className="text-gray-500 max-w-sm text-center mb-8">
-                            We couldn't find any items matching your current filters. Try adjusting your search or add a new {itemTypeLabel.toLowerCase()}.
-                        </p>
-                        <button
-                            onClick={() => { setSearchQuery(''); setCategoryFilter(''); }}
-                            className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-colors"
+
+                    <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
+                        {/* Status Filter */}
+                        <select
+                            value={stockFilter}
+                            onChange={(e) => setStockFilter(e.target.value)}
+                            className="px-3 py-2 bg-gray-50 border border-transparent focus:bg-white focus:border-amber-500/50 rounded-lg text-sm outline-none cursor-pointer hover:bg-gray-100 transition-all font-medium text-zinc-700"
                         >
-                            Clear All Filters
+                            <option value="all">All Status</option>
+                            <option value="true">In Stock</option>
+                            <option value="false">Out of Stock</option>
+                        </select>
+
+                        {/* Category Filter */}
+                        {!isBangles && (
+                            <select
+                                value={categoryFilter}
+                                onChange={(e) => setCategoryFilter(e.target.value)}
+                                className="px-3 py-2 bg-gray-50 border border-transparent focus:bg-white focus:border-amber-500/50 rounded-lg text-sm outline-none cursor-pointer hover:bg-gray-100 transition-all font-medium text-zinc-700"
+                            >
+                                <option value="">All Categories</option>
+                                {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                        )}
+
+                        {/* Sort */}
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            className="px-3 py-2 bg-gray-50 border border-transparent focus:bg-white focus:border-amber-500/50 rounded-lg text-sm outline-none cursor-pointer hover:bg-gray-100 transition-all font-medium text-zinc-700"
+                        >
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="price_asc">Price: Low to High</option>
+                            <option value="price_desc">Price: High to Low</option>
+                            <option value="name_asc">Name: A-Z</option>
+                        </select>
+                    </div>
+
+                    {/* View Toggle */}
+                    <div className="flex bg-gray-100 p-1 rounded-lg shrink-0 ml-auto sm:ml-0">
+                        <button
+                            onClick={() => setViewMode('list')}
+                            className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-zinc-900' : 'text-zinc-400 hover:text-zinc-600'}`}
+                        >
+                            <List size={16} />
+                        </button>
+                        <button
+                            onClick={() => setViewMode('grid')}
+                            className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-zinc-900' : 'text-zinc-400 hover:text-zinc-600'}`}
+                        >
+                            <LayoutGrid size={16} />
                         </button>
                     </div>
-                ) : (
-                    <>
-                        {viewMode === 'grid' ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {products.map(product => (
-                                    <GridItem key={product.id} product={product} />
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="bg-gray-50/80 border-b border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                                <th className="px-6 py-4">{itemTypeLabel} Details</th>
-                                                <th className="px-6 py-4">Category</th>
-                                                <th className="px-6 py-4">Price</th>
-                                                <th className="px-6 py-4">Status</th>
-                                                <th className="px-6 py-4 text-right">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {products.map(product => (
-                                                <ListItem key={product.id} product={product} />
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        )}
 
-                        {/* Pagination */}
-                        {pages > 1 && (
-                            <div className="mt-8 flex items-center justify-between border-t border-gray-200 pt-6">
-                                <p className="text-sm text-gray-500 font-medium">
-                                    Showing page <span className="text-maroon-900 font-bold">{page}</span> of {pages}
-                                </p>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                                        disabled={page === 1}
-                                        className="p-2.5 bg-white border border-gray-200 rounded-xl hover:border-maroon-200 hover:text-maroon-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                                    >
-                                        <ChevronLeft size={18} />
-                                    </button>
-                                    <button
-                                        onClick={() => setPage(p => Math.min(pages, p + 1))}
-                                        disabled={page === pages}
-                                        className="p-2.5 bg-white border border-gray-200 rounded-xl hover:border-maroon-200 hover:text-maroon-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                                    >
-                                        <ChevronRight size={18} />
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </>
-                )}
+                    <button
+                        onClick={() => setIsFormOpen(true)}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-all font-medium text-sm shadow-lg shadow-zinc-900/20 whitespace-nowrap"
+                    >
+                        <Plus size={16} />
+                        <span className="hidden sm:inline">Add Item</span>
+                        <span className="sm:hidden">Add</span>
+                    </button>
+                </div>
             </div>
 
-            {/* Editor Modal */}
+            {/* Content Area */}
+            {loading ? (
+                <div className="h-96 flex flex-col items-center justify-center text-zinc-400 animate-pulse">
+                    <div className="w-12 h-12 border-4 border-zinc-200 border-t-zinc-900 rounded-full animate-spin mb-4"></div>
+                    <p>Loading inventory...</p>
+                </div>
+            ) : products.length === 0 ? (
+                <div className="h-96 flex flex-col items-center justify-center bg-white border border-dashed border-gray-200 rounded-2xl">
+                    <div className="p-4 bg-gray-50 rounded-full mb-4">
+                        <PackageX size={32} className="text-gray-400" />
+                    </div>
+                    <h3 className="text-zinc-900 font-bold mb-1">No items found</h3>
+                    <p className="text-zinc-500 text-sm mb-6">Try adjusting your filters or add a new item.</p>
+                    <button
+                        onClick={() => { setSearchQuery(''); setCategoryFilter(''); setStockFilter('all'); }}
+                        className="px-4 py-2 text-sm text-zinc-600 hover:bg-gray-50 rounded-lg border border-gray-200 transition-all"
+                    >
+                        Clear Filters
+                    </button>
+                </div>
+            ) : (
+                <>
+                    {viewMode === 'grid' ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+                            {products.map(product => (
+                                <ProductCard key={product.id} product={product} />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="space-y-1">
+                            {products.map(product => (
+                                <ProductListItem key={product.id} product={product} />
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Pagination */}
+                    {pages > 1 && (
+                        <div className="flex items-center justify-center gap-2 mt-12">
+                            <button
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                                className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            >
+                                <ChevronLeft size={16} />
+                            </button>
+                            <span className="text-sm font-medium text-zinc-600 px-4">
+                                Page {page} of {pages}
+                            </span>
+                            <button
+                                onClick={() => setPage(p => Math.min(pages, p + 1))}
+                                disabled={page === pages}
+                                className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            >
+                                <ChevronRight size={16} />
+                            </button>
+                        </div>
+                    )}
+                </>
+            )}
+
+            {/* Form Modal */}
             {isFormOpen && (
                 <ProductForm
                     onClose={handleFormClose}

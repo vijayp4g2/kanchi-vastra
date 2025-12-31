@@ -10,7 +10,7 @@ const getProducts = async (params = {}) => {
     const query = new URLSearchParams(params).toString();
     const response = await fetch(`${API_URL}/products?${query}`);
     if (!response.ok) {
-        console.error('getProducts failed:', response.status, response.statusText);
+        console.error('API Error: Failed to fetch products', response.status);
         throw new Error('Failed to fetch products');
     }
     const data = await response.json();

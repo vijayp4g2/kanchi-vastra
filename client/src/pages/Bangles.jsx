@@ -20,7 +20,7 @@ const staggerContainer = {
 };
 
 const Bangles = () => {
-    const { products, loading } = useProduct();
+    const { products, loading, error } = useProduct();
     // Filter products specifically for Bangles
     const [bangleCollections, setBangleCollections] = useState([]);
     const [sortedProducts, setSortedProducts] = useState([]);
@@ -29,7 +29,10 @@ const Bangles = () => {
 
     useEffect(() => {
         if (products) {
-            const bangles = products.filter(product => product.category === 'Bangles');
+            // FIXED: Case-insensitive category matching for Bangles
+            const bangles = products.filter(product =>
+                product.category && product.category.toLowerCase() === 'bangles'
+            );
             setBangleCollections(bangles);
             setSortedProducts(bangles);
         }
@@ -39,16 +42,32 @@ const Bangles = () => {
     useEffect(() => {
         let filtered = [...bangleCollections];
 
+        // Apply category filters
         if (activeFilter === 'handmade') {
             filtered = filtered.filter(p => p.subCategory === 'Handmade' || p.isHandmade);
         } else if (activeFilter === 'traditional') {
             filtered = filtered.filter(p => p.name.toLowerCase().includes('temple') || p.name.toLowerCase().includes('antique'));
         }
 
-        if (sortBy === 'price-low') {
-            filtered.sort((a, b) => a.price - b.price);
-        } else if (sortBy === 'price-high') {
-            filtered.sort((a, b) => b.price - a.price);
+        // Apply sorting
+        switch (sortBy) {
+            case 'price-low':
+                filtered.sort((a, b) => a.price - b.price);
+                break;
+            case 'price-high':
+                filtered.sort((a, b) => b.price - a.price);
+                break;
+            case 'newest':
+                // IMPROVED: Sort by createdAt date if available, fallback to isNewArrival flag
+                filtered.sort((a, b) => {
+                    if (a.createdAt && b.createdAt) {
+                        return new Date(b.createdAt) - new Date(a.createdAt);
+                    }
+                    return (b.isNewArrival === a.isNewArrival ? 0 : b.isNewArrival ? 1 : -1);
+                });
+                break;
+            default: // featured
+                break;
         }
         setSortedProducts(filtered);
     }, [sortBy, activeFilter, bangleCollections]);
@@ -113,26 +132,39 @@ const Bangles = () => {
                 <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-8">
                     <div>
                         <h2 className="text-3xl font-serif text-gray-900 mb-2">Curated Collections</h2>
-                        <p className="text-gray-500 font-light">{sortedProducts.length} Exclusive Pieces Available</p>
+                        <p className="text-gray-500 font-light">
+                            Showing <span className="text-gray-900 font-semibold">{sortedProducts.length}</span> of <span className="text-gray-900 font-semibold">{bangleCollections.length}</span> exclusive pieces
+                        </p>
                     </div>
 
                     <div className="flex flex-wrap items-center justify-center gap-4">
-                        {/* Filter Tabs */}
+                        {/* Filter Tabs with Product Counts */}
                         <div className="flex bg-stone-100 p-1 rounded-full border border-stone-200">
                             {[
-                                { id: 'all', label: 'All' },
-                                { id: 'handmade', label: 'Hand Made' },
-                                { id: 'traditional', label: 'Traditional' }
+                                { id: 'all', label: 'All', count: bangleCollections.length },
+                                {
+                                    id: 'handmade',
+                                    label: 'Hand Made',
+                                    count: bangleCollections.filter(p => p.subCategory === 'Handmade' || p.isHandmade).length
+                                },
+                                {
+                                    id: 'traditional',
+                                    label: 'Traditional',
+                                    count: bangleCollections.filter(p => p.name.toLowerCase().includes('temple') || p.name.toLowerCase().includes('antique')).length
+                                }
                             ].map((tab) => (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveFilter(tab.id)}
-                                    className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeFilter === tab.id
+                                    className={`px-6 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${activeFilter === tab.id
                                         ? 'bg-white text-gray-900 shadow-sm'
                                         : 'text-gray-500 hover:text-gray-700'
                                         }`}
                                 >
                                     {tab.label}
+                                    <span className={`text-xs px-2 py-0.5 rounded-full ${activeFilter === tab.id ? 'bg-gold-100 text-gold-700' : 'bg-stone-200 text-stone-600'}`}>
+                                        {tab.count}
+                                    </span>
                                 </button>
                             ))}
                         </div>
@@ -147,6 +179,7 @@ const Bangles = () => {
                                 className="bg-transparent text-sm font-medium text-gray-900 focus:outline-none cursor-pointer pr-2"
                             >
                                 <option value="featured">Featured</option>
+                                <option value="newest">Newest First</option>
                                 <option value="price-low">Price: Low to High</option>
                                 <option value="price-high">Price: High to Low</option>
                             </select>
@@ -156,41 +189,66 @@ const Bangles = () => {
 
                 {/* Grid */}
                 {loading ? (
-                    <div className="flex justify-center items-center py-20">
-                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold-600"></div>
+                    <div className="flex flex-col justify-center items-center py-20">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold-600 mb-4"></div>
+                        <p className="text-stone-500 text-sm">Loading our exquisite collection...</p>
+                    </div>
+                ) : error ? (
+                    <div className="text-center py-20 bg-white rounded-2xl border border-red-100">
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-red-50 rounded-full mb-4">
+                            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h3 className="text-2xl font-serif text-gray-900 mb-2">Oops! Something went wrong</h3>
+                        <p className="text-stone-600 mb-6 max-w-md mx-auto">{error}</p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="px-6 py-3 bg-stone-900 text-white rounded-full hover:bg-gold-600 transition-all shadow-lg hover:shadow-xl"
+                        >
+                            Try Again
+                        </button>
                     </div>
                 ) : (
-                    <motion.div
-
-                        variants={staggerContainer}
-                        initial="hidden"
-                        animate="visible"
-                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 md:gap-10"
-                    >
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 md:gap-10">
                         {sortedProducts.length > 0 ? (
-                            sortedProducts.map((product) => (
+                            sortedProducts.map((product, index) => (
                                 <motion.div
                                     key={product.id}
-                                    variants={fadeInUp}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5, delay: index * 0.1 }}
                                     className="group"
                                 >
                                     <ProductCard product={product} />
                                 </motion.div>
                             ))
                         ) : (
-                            <div className="col-span-full py-24 text-center bg-white rounded-2xl border border-dashed border-stone-200">
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="col-span-full py-24 text-center bg-white rounded-2xl border border-dashed border-stone-200"
+                            >
                                 <Sparkles className="w-12 h-12 text-stone-300 mx-auto mb-4" />
-                                <h3 className="text-xl font-serif text-gray-900 mb-2">Collection Expanding</h3>
-                                <p className="text-gray-500 max-w-sm mx-auto">Our artisans are currently crafting new pieces for this collection. Please check back soon.</p>
-                                <button
-                                    onClick={() => setActiveFilter('all')}
-                                    className="mt-6 text-gold-600 font-medium hover:underline"
-                                >
-                                    View all bangles
-                                </button>
-                            </div>
+                                <h3 className="text-2xl font-serif text-gray-900 mb-2">No bangles found</h3>
+                                <p className="text-gray-500 max-w-sm mx-auto mb-6 leading-relaxed">
+                                    {activeFilter !== 'all'
+                                        ? `We couldn't find any ${activeFilter} bangles. Try viewing all our collections.`
+                                        : 'Our artisans are currently crafting new pieces for this collection. Please check back soon.'
+                                    }
+                                </p>
+                                {activeFilter !== 'all' && (
+                                    <button
+                                        onClick={() => setActiveFilter('all')}
+                                        className="px-6 py-3 bg-stone-900 text-white rounded-full hover:bg-gold-600 transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2"
+                                    >
+                                        View all bangles
+                                        <ArrowRight size={18} />
+                                    </button>
+                                )}
+                            </motion.div>
                         )}
-                    </motion.div>
+                    </div>
                 )}
 
 
