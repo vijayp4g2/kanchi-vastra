@@ -40,9 +40,9 @@ if (process.env.NODE_ENV === 'production') {
     // Serve static files from client/dist (which now includes the admin UI)
     app.use(express.static(path.join(__dirname, '../client/dist')));
 
-    // Handle SPA routing - return index.html for all unrelated routes
-    // This allows the React Router to handle /admin/* paths on the client side
-    app.get('*', (req, res) => {
+    // Handle SPA routing - return index.html for all non-API routes
+    // uses regex to avoid matching /api routes and avoids 'path-to-regexp' * error
+    app.get(/^(?!\/api).+/, (req, res) => {
         res.sendFile(path.join(__dirname, '../client/dist/index.html'));
     });
 } else {
