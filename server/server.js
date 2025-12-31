@@ -1,4 +1,5 @@
 import path from 'path';
+import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -32,8 +33,8 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/categories', categoryRoutes);
 
-const __dirname = path.resolve();
-app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 if (process.env.NODE_ENV === 'production') {
     // Admin Static Files
@@ -44,16 +45,16 @@ if (process.env.NODE_ENV === 'production') {
 
     // Admin catch-all (must be before client catch-all)
     app.get('/admin/*', (req, res) => {
-        res.sendFile(path.resolve(__dirname, '../admin/dist/index.html'));
+        res.sendFile(path.join(__dirname, '../admin/dist/index.html'));
     });
 
     // Client catch-all
     app.get('*', (req, res) => {
-        res.sendFile(path.resolve(__dirname, '../client/dist/index.html'));
+        res.sendFile(path.join(__dirname, '../client/dist/index.html'));
     });
 } else {
     app.get('/', (req, res) => {
-        res.send('API is running...');
+        res.send('API is running in Development Mode...');
     });
 }
 
