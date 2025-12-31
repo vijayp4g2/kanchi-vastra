@@ -1,0 +1,19 @@
+# Dependencies
+
+# Environment Variables
+
+# Build Outputs
+
+
+# IDE/Editor
+.idea/
+*.swp
+*.swo
+
+# OS System Files
+.DS_Store
+Thumbs.db
+
+# Testing/Coverage
+
+# Application Specific
