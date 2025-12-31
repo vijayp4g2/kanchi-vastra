@@ -46,22 +46,17 @@ function App() {
           <CartProvider>
             <WishlistProvider>
               <QuickViewProvider>
-                <Router>
+                <Router basename="/admin">
                   <ScrollToTop />
                   <LayoutWrapper>
                     <Routes>
-                      {/* Redirect root to Admin */}
-                      <Route path="/" element={<Navigate to="/admin/products" replace />} />
-
-                      {/* Login Route - Reusing Account page for login if not embedded. 
-                          If Account.jsx is the customer account page, it might serve as Login. 
-                          Typically Admin login is separate or same auth flow. */}
+                      {/* Login Route */}
                       <Route path="/account" element={<Account />} />
                       <Route path="/login" element={<Navigate to="/account" replace />} />
 
                       {/* Admin Routes */}
-                      <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
-                        <Route index element={<Navigate to="/admin/products" replace />} />
+                      <Route path="/" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+                        <Route index element={<Navigate to="products" replace />} />
                         <Route path="products" element={<ProductList />} />
                         <Route path="bangles" element={<ProductList initialCategory="Bangles" />} />
                         <Route path="categories" element={<CategoryList />} />
@@ -70,7 +65,7 @@ function App() {
                       </Route>
 
                       {/* Catch all */}
-                      <Route path="*" element={<Navigate to="/admin/products" replace />} />
+                      <Route path="*" element={<Navigate to="/products" replace />} />
                     </Routes>
                   </LayoutWrapper>
                 </Router>

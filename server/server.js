@@ -19,7 +19,10 @@ connectDB();
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: 'https://kanchi-vastra.onrender.com',
+    credentials: true
+}));
 app.use(express.json());
 
 // Routes
@@ -32,10 +35,27 @@ app.use('/api/categories', categoryRoutes);
 const __dirname = path.resolve();
 app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
 
-// Basic route
-app.get('/', (req, res) => {
-    res.send('API is running...');
-});
+if (process.env.NODE_ENV === 'production') {
+    // Admin Static Files
+    app.use('/admin', express.static(path.join(__dirname, '../admin/dist')));
+
+    // Client Static Files
+    app.use(express.static(path.join(__dirname, '../client/dist')));
+
+    // Admin catch-all (must be before client catch-all)
+    app.get('/admin/*', (req, res) => {
+        res.sendFile(path.resolve(__dirname, '../admin/dist/index.html'));
+    });
+
+    // Client catch-all
+    app.get('*', (req, res) => {
+        res.sendFile(path.resolve(__dirname, '../client/dist/index.html'));
+    });
+} else {
+    app.get('/', (req, res) => {
+        res.send('API is running...');
+    });
+}
 
 // Error Handling
 app.use(notFound);

@@ -37,7 +37,7 @@ const Footer = () => {
                                 { name: 'Collections', path: '/shop' },
                                 { name: 'New Arrivals', path: '/new-arrivals' },
                                 { name: 'Contact Us', path: '/contact' },
-                                ...(user && user.role === 'admin' ? [{ name: 'Admin Panel', path: 'http://localhost:5174', external: true }] : [])
+                                ...(user && user.role === 'admin' ? [{ name: 'Admin Panel', path: '/admin', external: true }] : [])
                             ].map((item) => (
                                 <li key={item.name}>
                                     {item.external ? (
