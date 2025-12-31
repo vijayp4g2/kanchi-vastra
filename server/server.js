@@ -44,12 +44,12 @@ if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '../client/dist')));
 
     // Admin catch-all (must be before client catch-all)
-    app.get('/admin/*', (req, res) => {
+    app.get('/admin/:path*', (req, res) => {
         res.sendFile(path.join(__dirname, '../admin/dist/index.html'));
     });
 
     // Client catch-all
-    app.get('*', (req, res) => {
+    app.get('/:path*', (req, res) => {
         res.sendFile(path.join(__dirname, '../client/dist/index.html'));
     });
 } else {
