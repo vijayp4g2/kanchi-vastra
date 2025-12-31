@@ -18,7 +18,7 @@ import api from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
-const ProductForm = ({ onClose, initialData = null, defaultCategory = '' }) => {
+const ProductForm = ({ onClose, initialData = null, defaultCategory = '', defaultNewArrival = false }) => {
     const { user } = useAuth();
     const { addToast } = useToast();
     const fileInputRef = useRef(null);
@@ -30,7 +30,7 @@ const ProductForm = ({ onClose, initialData = null, defaultCategory = '' }) => {
         price: '',
         description: '',
         inStock: true,
-        isNewArrival: false,
+        isNewArrival: defaultNewArrival,
         isFeatured: false,
     });
 
@@ -47,7 +47,7 @@ const ProductForm = ({ onClose, initialData = null, defaultCategory = '' }) => {
                 price: initialData.price || '',
                 description: initialData.description || '',
                 inStock: initialData.inStock !== undefined ? initialData.inStock : true,
-                isNewArrival: initialData.isNewArrival || initialData.isNew || false,
+                isNewArrival: initialData.isNewArrival !== undefined ? initialData.isNewArrival : (initialData.isNew !== undefined ? initialData.isNew : false),
                 isFeatured: initialData.featured || false,
             });
 

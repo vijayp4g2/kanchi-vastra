@@ -85,6 +85,7 @@ function App() {
                     <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
                       <Route index element={<Navigate to="products" replace />} />
                       <Route path="products" element={<ProductList />} />
+                      <Route path="new-arrivals" element={<ProductList filterNewArrivals={true} />} />
                       <Route path="bangles" element={<ProductList initialCategory="Bangles" />} />
                       <Route path="categories" element={<CategoryList />} />
                       <Route path="analytics" element={<div className="p-8 text-center text-gray-400">Analytics Coming Soon</div>} />

@@ -23,7 +23,7 @@ import api from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
-const ProductList = ({ initialCategory = '' }) => {
+const ProductList = ({ initialCategory = '', filterNewArrivals = false }) => {
     const { user } = useAuth();
     const { addToast } = useToast();
 
@@ -48,8 +48,8 @@ const ProductList = ({ initialCategory = '' }) => {
 
     // Derived Constants
     const isBangles = initialCategory === 'Bangles';
-    const itemTypeLabel = isBangles ? 'Bangle' : 'Saree';
-    const itemTypeLabelPlural = isBangles ? 'Bangles' : 'Sarees';
+    const itemTypeLabel = isBangles ? 'Bangle' : (filterNewArrivals ? 'Item' : 'Saree');
+    const itemTypeLabelPlural = isBangles ? 'Bangles' : (filterNewArrivals ? 'New Arrivals' : 'Sarees');
 
     // Categories List
     const categories = isBangles
@@ -76,12 +76,16 @@ const ProductList = ({ initialCategory = '' }) => {
             if (isBangles) {
                 params.category = 'Bangles';
             }
+            if (filterNewArrivals) {
+                params.isNewArrival = true;
+            }
 
             const data = await api.getProducts(params);
             let filteredProducts = data.products || [];
 
             // Client-side filtering to exclude Bangles from the general Saree list if not strictly filtered
-            if (!isBangles && !categoryFilter) {
+            // Only apply this exclusion if we are NOT in Bangles mode, NOT in New Arrivals mode, and NO category filter is set
+            if (!isBangles && !filterNewArrivals && !categoryFilter) {
                 filteredProducts = filteredProducts.filter(p => p.category !== 'Bangles');
             }
 
@@ -98,7 +102,7 @@ const ProductList = ({ initialCategory = '' }) => {
 
     useEffect(() => {
         fetchProducts();
-    }, [page, sortBy, categoryFilter, initialCategory, viewMode]);
+    }, [page, sortBy, categoryFilter, initialCategory, filterNewArrivals, viewMode]);
 
     // Search Debounce using Effect
     useEffect(() => {
@@ -141,8 +145,8 @@ const ProductList = ({ initialCategory = '' }) => {
 
     const StatusBadge = ({ inStock }) => (
         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${inStock
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                : 'bg-rose-50 text-rose-700 border border-rose-100'
+            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+            : 'bg-rose-50 text-rose-700 border border-rose-100'
             }`}>
             {inStock ? <CheckCircle size={10} /> : <AlertCircle size={10} />}
             {inStock ? 'In Stock' : 'Out of Stock'}
@@ -264,7 +268,7 @@ const ProductList = ({ initialCategory = '' }) => {
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
                             <h1 className="text-2xl font-serif font-bold text-maroon-900 flex items-center gap-3">
-                                {isBangles ? 'Bangles Collection' : 'Premium Sarees'}
+                                {filterNewArrivals ? 'New Arrivals' : (isBangles ? 'Bangles Collection' : 'Premium Sarees')}
                                 <span className="px-3 py-1 bg-maroon-50 rounded-full text-xs font-sans font-bold text-maroon-600 tracking-wider uppercase">
                                     Admin
                                 </span>
@@ -320,8 +324,8 @@ const ProductList = ({ initialCategory = '' }) => {
                                 <button
                                     onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
                                     className={`flex items-center gap-2 px-4 py-2.5 border rounded-xl text-sm font-bold transition-all shadow-sm ${categoryFilter
-                                            ? 'bg-maroon-50 border-maroon-200 text-maroon-800'
-                                            : 'bg-white border-gray-200 text-gray-600 hover:border-maroon-200'
+                                        ? 'bg-maroon-50 border-maroon-200 text-maroon-800'
+                                        : 'bg-white border-gray-200 text-gray-600 hover:border-maroon-200'
                                         }`}
                                 >
                                     <Filter size={16} />
@@ -479,6 +483,7 @@ const ProductList = ({ initialCategory = '' }) => {
                     onClose={handleFormClose}
                     initialData={editingProduct}
                     defaultCategory={categoryFilter || (isBangles ? 'Bangles' : '')}
+                    defaultNewArrival={filterNewArrivals}
                 />
             )}
         </div>

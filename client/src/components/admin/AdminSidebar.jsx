@@ -12,6 +12,7 @@ import {
     PieChart,
     PlusCircle,
     Circle,
+    Star
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -21,7 +22,8 @@ const AdminSidebar = () => {
     const navigate = useNavigate();
 
     const navItems = [
-        { icon: ShoppingBag, label: 'Products', path: '/admin/products' },
+        { icon: ShoppingBag, label: 'Sarees', path: '/admin/products' },
+        { icon: Star, label: 'New Arrivals', path: '/admin/new-arrivals' },
         { icon: Circle, label: 'Bangles', path: '/admin/bangles' },
         { icon: Layers, label: 'Categories', path: '/admin/categories' },
         { icon: PieChart, label: 'Analytics', path: '/admin/analytics' },

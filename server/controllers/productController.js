@@ -4,6 +4,9 @@ import Product from '../models/Product.js';
 // @desc    Fetch all products
 // @route   GET /api/products
 // @access  Public
+// @desc    Fetch all products
+// @route   GET /api/products
+// @access  Public
 const getProducts = asyncHandler(async (req, res) => {
     const pageSize = Number(req.query.pageSize) || 10;
     const page = Number(req.query.pageNumber) || 1;
@@ -16,6 +19,7 @@ const getProducts = asyncHandler(async (req, res) => {
     } : {};
 
     const category = req.query.category ? { category: req.query.category } : {};
+    const newArrival = req.query.isNewArrival ? { isNewArrival: req.query.isNewArrival === 'true' } : {};
 
     // Sort logic
     let sort = {};
@@ -31,8 +35,8 @@ const getProducts = asyncHandler(async (req, res) => {
         sort = { createdAt: -1 }; // Default to newest
     }
 
-    const count = await Product.countDocuments({ ...keyword, ...category });
-    const products = await Product.find({ ...keyword, ...category })
+    const count = await Product.countDocuments({ ...keyword, ...category, ...newArrival });
+    const products = await Product.find({ ...keyword, ...category, ...newArrival })
         .sort(sort)
         .limit(pageSize)
         .skip(pageSize * (page - 1));
@@ -63,10 +67,7 @@ const getProductById = asyncHandler(async (req, res) => {
 // @route   POST /api/products
 // @access  Private/Admin
 const createProduct = asyncHandler(async (req, res) => {
-    const { name, price, description, images, category, subCategory, inStock, featured, isNew, isHandmade } = req.body;
-
-    // Use request body if provided, otherwise defaults will be handled by schema or logic here.
-    // Removed specific "Sample" fallbacks to encourage real data, but kept structure safe.
+    const { name, price, description, images, category, subCategory, inStock, featured, isNewArrival, isHandmade } = req.body;
 
     const product = new Product({
         name: name || 'Sample Name',
@@ -77,7 +78,7 @@ const createProduct = asyncHandler(async (req, res) => {
         subCategory,
         inStock: inStock !== undefined ? inStock : true,
         featured: featured || false,
-        isNew: isNew !== undefined ? isNew : true,
+        isNewArrival: isNewArrival !== undefined ? isNewArrival : true,
         isHandmade: isHandmade || false,
         description: description || 'No description',
     });
@@ -90,7 +91,7 @@ const createProduct = asyncHandler(async (req, res) => {
 // @route   PUT /api/products/:id
 // @access  Private/Admin
 const updateProduct = asyncHandler(async (req, res) => {
-    const { name, price, description, images, category, subCategory, inStock, featured, isNew, isHandmade } = req.body;
+    const { name, price, description, images, category, subCategory, inStock, featured, isNewArrival, isHandmade } = req.body;
 
     const product = await Product.findById(req.params.id);
 
@@ -103,7 +104,7 @@ const updateProduct = asyncHandler(async (req, res) => {
         product.subCategory = subCategory || product.subCategory;
         product.inStock = inStock !== undefined ? inStock : product.inStock;
         product.featured = featured !== undefined ? featured : product.featured;
-        product.isNew = isNew !== undefined ? isNew : product.isNew;
+        product.isNewArrival = isNewArrival !== undefined ? isNewArrival : product.isNewArrival;
         product.isHandmade = isHandmade !== undefined ? isHandmade : product.isHandmade;
 
         const updatedProduct = await product.save();
