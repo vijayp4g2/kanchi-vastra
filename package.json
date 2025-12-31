@@ -4,15 +4,14 @@
     "description": "Monorepo for Kanchi Vastra",
     "workspaces": [
         "client",
-        "admin",
         "server"
     ],
     "scripts": {
         "start": "NODE_ENV=production node server/server.js",
         "dev:client": "npm run dev --workspace=client",
-        "dev:admin": "npm run dev --workspace=admin",
+        "dev:admin": "echo Admin is merged into client. Use dev:client.",
         "dev:server": "npm run dev --workspace=server",
-        "build": "npm run build --workspaces"
+        "build": "npm run build --workspace=client"
     },
     "keywords": [],
     "author": "",

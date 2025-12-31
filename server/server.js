@@ -37,19 +37,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 if (process.env.NODE_ENV === 'production') {
-    // Admin Static Files
-    app.use('/admin', express.static(path.join(__dirname, '../admin/dist')));
-
-    // Client Static Files
+    // Serve static files from client/dist (which now includes the admin UI)
     app.use(express.static(path.join(__dirname, '../client/dist')));
 
-    // Admin catch-all (must be before client catch-all)
-    app.get(/^\/admin(?:\/|$)/, (req, res) => {
-        res.sendFile(path.join(__dirname, '../admin/dist/index.html'));
-    });
-
-    // Client catch-all
-    app.get(/^\/.*$/, (req, res) => {
+    // Handle SPA routing - return index.html for all unrelated routes
+    // This allows the React Router to handle /admin/* paths on the client side
+    app.get('*', (req, res) => {
         res.sendFile(path.join(__dirname, '../client/dist/index.html'));
     });
 } else {

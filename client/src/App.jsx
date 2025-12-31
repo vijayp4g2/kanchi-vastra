@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Outlet, Navigate } from 'react-router-dom';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import Home from './pages/Home';
@@ -45,6 +45,11 @@ const LayoutWrapper = ({ children }) => {
   );
 };
 
+import AdminLayout from './components/admin/AdminLayout';
+import ProductList from './pages/admin/ProductList';
+import CategoryList from './pages/admin/CategoryList';
+import AdminRoute from './components/admin/AdminRoute';
+
 function App() {
   return (
     <ToastProvider>
@@ -55,9 +60,15 @@ function App() {
               <QuickViewProvider>
                 <Router>
                   <ScrollToTop />
-                  <LayoutWrapper>
-                    <Routes>
-                      {/* Public Routes */}
+                  <Routes>
+                    {/* Public Routes - Wrapped in LayoutWrapper */}
+                    <Route
+                      element={
+                        <LayoutWrapper>
+                          <Outlet />
+                        </LayoutWrapper>
+                      }
+                    >
                       <Route path="/" element={<Home />} />
                       <Route path="/shop" element={<Shop />} />
                       <Route path="/new-arrivals" element={<NewArrivals />} />
@@ -68,8 +79,20 @@ function App() {
                       <Route path="/account" element={<Account />} />
                       <Route path="/about" element={<About />} />
                       <Route path="/contact" element={<Contact />} />
-                    </Routes>
-                  </LayoutWrapper>
+                    </Route>
+
+                    {/* Admin Routes - Standalone Layout */}
+                    <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+                      <Route index element={<Navigate to="products" replace />} />
+                      <Route path="products" element={<ProductList />} />
+                      <Route path="bangles" element={<ProductList initialCategory="Bangles" />} />
+                      <Route path="categories" element={<CategoryList />} />
+                      <Route path="analytics" element={<div className="p-8 text-center text-gray-400">Analytics Coming Soon</div>} />
+                      <Route path="settings" element={<div className="p-8 text-center text-gray-400">Settings Coming Soon</div>} />
+                    </Route>
+
+                    {/* Catch-all potentially? For now rely on 404 behavior or specific catch */}
+                  </Routes>
                 </Router>
               </QuickViewProvider>
             </WishlistProvider>
