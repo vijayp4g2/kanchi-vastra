@@ -242,115 +242,65 @@ const ProductList = ({ initialCategory = '', filterNewArrivals = false }) => {
     return (
         <div className="space-y-6">
             {/* Dashboard Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
+                <div className="bg-white p-3 lg:p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
                     <div>
-                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-1">Total Inventory</p>
-                        <h3 className="text-2xl font-serif font-bold text-zinc-900">{total}</h3>
+                        <p className="text-zinc-500 text-[10px] lg:text-xs font-bold uppercase tracking-wider mb-1">Total Inventory</p>
+                        <h3 className="text-xl lg:text-2xl font-serif font-bold text-zinc-900">{total}</h3>
                     </div>
-                    <div className="p-3 bg-zinc-100 rounded-lg text-zinc-600">
-                        <LayoutGrid size={20} />
+                    <div className="p-2 lg:p-3 bg-zinc-100 rounded-lg text-zinc-600">
+                        <LayoutGrid size={18} className="lg:w-5 lg:h-5" />
                     </div>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                <div className="bg-white p-3 lg:p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
                     <div>
-                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-1">Active Filters</p>
-                        <div className="flex gap-2">
+                        <p className="text-zinc-500 text-[10px] lg:text-xs font-bold uppercase tracking-wider mb-1">Active Filters</p>
+                        <div className="flex gap-2 flex-wrap">
                             {(categoryFilter || stockFilter !== 'all' || searchQuery) ? (
                                 <>
-                                    {stockFilter !== 'all' && <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-md font-medium">{stockFilter === 'true' ? 'In Stock' : 'Out of Stock'}</span>}
-                                    {categoryFilter && <span className="text-xs bg-zinc-100 text-zinc-800 px-2 py-1 rounded-md font-medium">{categoryFilter}</span>}
-                                    {searchQuery && <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-md font-medium">Search</span>}
+                                    {stockFilter !== 'all' && <span className="text-[10px] lg:text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-md font-medium">{stockFilter === 'true' ? 'In Stock' : 'Out of Stock'}</span>}
+                                    {categoryFilter && <span className="text-[10px] lg:text-xs bg-zinc-100 text-zinc-800 px-2 py-1 rounded-md font-medium">{categoryFilter}</span>}
+                                    {searchQuery && <span className="text-[10px] lg:text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-md font-medium">Search</span>}
                                 </>
                             ) : (
-                                <span className="text-sm font-medium text-zinc-400">None</span>
+                                <span className="text-xs lg:text-sm font-medium text-zinc-400">None</span>
                             )}
                         </div>
                     </div>
-                    <div className="p-3 bg-amber-50 rounded-lg text-amber-600">
-                        <Filter size={20} />
+                    <div className="p-2 lg:p-3 bg-amber-50 rounded-lg text-amber-600">
+                        <Filter size={18} className="lg:w-5 lg:h-5" />
                     </div>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                <div className="bg-white p-3 lg:p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between sm:col-span-2 lg:col-span-1">
                     <div>
-                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider mb-1">Quick Actions</p>
+                        <p className="text-zinc-500 text-[10px] lg:text-xs font-bold uppercase tracking-wider mb-1">Quick Actions</p>
                         <button
                             onClick={() => setIsFormOpen(true)}
-                            className="text-sm font-bold text-amber-600 hover:text-amber-700 hover:underline"
+                            className="text-xs lg:text-sm font-bold text-amber-600 hover:text-amber-700 hover:underline"
                         >
                             + Add New Item
                         </button>
                     </div>
-                    <div className="p-3 bg-green-50 rounded-lg text-emerald-600">
-                        <Plus size={20} />
+                    <div className="p-2 lg:p-3 bg-green-50 rounded-lg text-emerald-600">
+                        <Plus size={18} className="lg:w-5 lg:h-5" />
                     </div>
                 </div>
             </div>
 
             {/* Toolbar */}
-            <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-widest">
-                        {isBangles ? 'Bangles' : 'Sarees'} List
-                    </h2>
-                    <span className="px-2 py-0.5 bg-zinc-100 text-zinc-600 text-[10px] font-bold rounded-full">{total}</span>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
-                    {/* Search */}
-                    <div className="relative flex-1 sm:w-56">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                        <input
-                            type="text"
-                            placeholder="Search by name..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-transparent focus:bg-white focus:border-amber-500/50 rounded-lg text-sm focus:ring-2 focus:ring-amber-500/10 outline-none transition-all"
-                        />
+            <div className="flex flex-col gap-3 lg:gap-4 bg-white p-3 lg:p-4 rounded-xl border border-gray-200 shadow-sm">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-xs lg:text-sm font-bold text-zinc-900 uppercase tracking-widest">
+                            {isBangles ? 'Bangles' : 'Sarees'} List
+                        </h2>
+                        <span className="px-2 py-0.5 bg-zinc-100 text-zinc-600 text-[10px] font-bold rounded-full">{total}</span>
                     </div>
 
-                    <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
-                        {/* Status Filter */}
-                        <select
-                            value={stockFilter}
-                            onChange={(e) => setStockFilter(e.target.value)}
-                            className="px-3 py-2 bg-gray-50 border border-transparent focus:bg-white focus:border-amber-500/50 rounded-lg text-sm outline-none cursor-pointer hover:bg-gray-100 transition-all font-medium text-zinc-700"
-                        >
-                            <option value="all">All Status</option>
-                            <option value="true">In Stock</option>
-                            <option value="false">Out of Stock</option>
-                        </select>
-
-                        {/* Category Filter */}
-                        {!isBangles && (
-                            <select
-                                value={categoryFilter}
-                                onChange={(e) => setCategoryFilter(e.target.value)}
-                                className="px-3 py-2 bg-gray-50 border border-transparent focus:bg-white focus:border-amber-500/50 rounded-lg text-sm outline-none cursor-pointer hover:bg-gray-100 transition-all font-medium text-zinc-700"
-                            >
-                                <option value="">All Categories</option>
-                                {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
-                        )}
-
-                        {/* Sort */}
-                        <select
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value)}
-                            className="px-3 py-2 bg-gray-50 border border-transparent focus:bg-white focus:border-amber-500/50 rounded-lg text-sm outline-none cursor-pointer hover:bg-gray-100 transition-all font-medium text-zinc-700"
-                        >
-                            <option value="newest">Newest First</option>
-                            <option value="oldest">Oldest First</option>
-                            <option value="price_asc">Price: Low to High</option>
-                            <option value="price_desc">Price: High to Low</option>
-                            <option value="name_asc">Name: A-Z</option>
-                        </select>
-                    </div>
-
-                    {/* View Toggle */}
-                    <div className="flex bg-gray-100 p-1 rounded-lg shrink-0 ml-auto sm:ml-0">
+                    {/* View Toggle - Desktop */}
+                    <div className="hidden sm:flex bg-gray-100 p-1 rounded-lg shrink-0">
                         <button
                             onClick={() => setViewMode('list')}
                             className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-zinc-900' : 'text-zinc-400 hover:text-zinc-600'}`}
@@ -364,15 +314,67 @@ const ProductList = ({ initialCategory = '', filterNewArrivals = false }) => {
                             <LayoutGrid size={16} />
                         </button>
                     </div>
+                </div>
 
-                    <button
-                        onClick={() => setIsFormOpen(true)}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-all font-medium text-sm shadow-lg shadow-zinc-900/20 whitespace-nowrap"
-                    >
-                        <Plus size={16} />
-                        <span className="hidden sm:inline">Add Item</span>
-                        <span className="sm:hidden">Add</span>
-                    </button>
+                <div className="flex flex-col sm:flex-row gap-2 lg:gap-3">
+                    {/* Search */}
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                        <input
+                            type="text"
+                            placeholder="Search by name..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-9 pr-4 py-2.5 lg:py-2 bg-gray-50 border border-transparent focus:bg-white focus:border-amber-500/50 rounded-lg text-sm focus:ring-2 focus:ring-amber-500/10 outline-none transition-all"
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-2 overflow-x-auto">
+                        {/* Status Filter */}
+                        <select
+                            value={stockFilter}
+                            onChange={(e) => setStockFilter(e.target.value)}
+                            className="flex-1 sm:flex-none px-3 py-2.5 lg:py-2 bg-gray-50 border border-transparent focus:bg-white focus:border-amber-500/50 rounded-lg text-xs lg:text-sm outline-none cursor-pointer hover:bg-gray-100 transition-all font-medium text-zinc-700"
+                        >
+                            <option value="all">All Status</option>
+                            <option value="true">In Stock</option>
+                            <option value="false">Out of Stock</option>
+                        </select>
+
+                        {/* Category Filter */}
+                        {!isBangles && (
+                            <select
+                                value={categoryFilter}
+                                onChange={(e) => setCategoryFilter(e.target.value)}
+                                className="flex-1 sm:flex-none px-3 py-2.5 lg:py-2 bg-gray-50 border border-transparent focus:bg-white focus:border-amber-500/50 rounded-lg text-xs lg:text-sm outline-none cursor-pointer hover:bg-gray-100 transition-all font-medium text-zinc-700"
+                            >
+                                <option value="">All Categories</option>
+                                {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                        )}
+
+                        {/* Sort */}
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            className="flex-1 sm:flex-none px-3 py-2.5 lg:py-2 bg-gray-50 border border-transparent focus:bg-white focus:border-amber-500/50 rounded-lg text-xs lg:text-sm outline-none cursor-pointer hover:bg-gray-100 transition-all font-medium text-zinc-700"
+                        >
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="price_asc">Price: Low to High</option>
+                            <option value="price_desc">Price: High to Low</option>
+                            <option value="name_asc">Name: A-Z</option>
+                        </select>
+
+                        <button
+                            onClick={() => setIsFormOpen(true)}
+                            className="flex items-center justify-center gap-2 px-4 py-2.5 lg:py-2 bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-all font-medium text-sm shadow-lg shadow-zinc-900/20 whitespace-nowrap"
+                        >
+                            <Plus size={16} />
+                            <span className="hidden xs:inline">Add Item</span>
+                            <span className="xs:hidden">Add</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -399,7 +401,7 @@ const ProductList = ({ initialCategory = '', filterNewArrivals = false }) => {
             ) : (
                 <>
                     {viewMode === 'grid' ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+                        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 lg:gap-6">
                             {products.map(product => (
                                 <ProductCard key={product.id} product={product} />
                             ))}

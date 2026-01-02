@@ -70,8 +70,21 @@ export default {
         zoomIn: {
           '0%': { opacity: '0', transform: 'scale(0.95)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'rain-drop': {
+          '0%': { transform: 'translateY(-100%)' },
+          '100%': { transform: 'translateY(200%)' },
         }
-      }
+      },
+      animation: {
+        'fadeIn': 'fadeIn 0.5s ease-out forwards',
+        'slideDown': 'slideDown 0.4s ease-out forwards',
+        'slideUp': 'slideUp 0.4s ease-out forwards',
+        'slideLeft': 'slideLeft 0.4s ease-out forwards',
+        'zoomIn': 'zoomIn 0.3s ease-out forwards',
+        'rain-drop': 'rain-drop 1.5s cubic-bezier(0.76, 0.05, 0.86, 0.06) infinite',
+      },
+
     },
   },
   plugins: [],

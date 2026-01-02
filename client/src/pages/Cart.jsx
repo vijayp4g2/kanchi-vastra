@@ -9,9 +9,23 @@ const Cart = () => {
     const navigate = useNavigate();
 
     const SHIPPING_COST = 0; // Free shipping for now
-    const TAX_RATE = 0.05; // 5% GST assume
-    const taxAmount = totalPrice * TAX_RATE;
-    const finalTotal = totalPrice + taxAmount + SHIPPING_COST;
+    const finalTotal = totalPrice + SHIPPING_COST;
+
+    const handleWhatsAppCheckout = () => {
+        const phoneNumber = "919494572676";
+        let message = "Hello, I would like to place an order for the following items:\n\n";
+
+        cart.forEach((item, index) => {
+            message += `${index + 1}. *${item.name}*\n   Quantity: ${item.quantity}\n   Price: ₹${(item.price * item.quantity).toLocaleString()}\n\n`;
+        });
+
+        message += `*Total Amount: ₹${finalTotal.toLocaleString()}*\n\nPlease confirm my order.`;
+
+        const encodedMessage = encodeURIComponent(message);
+        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+
+        window.open(whatsappUrl, '_blank');
+    };
 
     if (cart.length === 0) {
         return (
@@ -148,10 +162,6 @@ const Cart = () => {
                                         <span>Shipping</span>
                                         <span className="text-green-600 font-medium">Free</span>
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span>GST (5%)</span>
-                                        <span>₹{taxAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                                    </div>
                                 </div>
 
                                 <div className="border-t border-dashed border-gray-200 pt-4 mb-8">
@@ -165,10 +175,10 @@ const Cart = () => {
                                 </div>
 
                                 <button
-                                    onClick={() => alert("Checkout functionality coming soon!")}
+                                    onClick={handleWhatsAppCheckout}
                                     className="w-full bg-gray-900 text-white py-4 rounded-xl font-medium shadow-xl hover:bg-gold-600 hover:shadow-gold-500/20 transition-all flex items-center justify-center gap-2 group"
                                 >
-                                    <span>Proceed to Checkout</span>
+                                    <span>Buy Now</span>
                                     <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                                 </button>
                             </div>

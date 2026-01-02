@@ -73,16 +73,16 @@ const Footer = () => {
                         <h4 className="font-serif text-lg font-semibold text-gray-900 mb-6">Contact Us</h4>
                         <ul className="space-y-4">
                             <li className="flex items-start">
-                                <MapPin size={20} className="mr-3 text-gold-500 mt-1" />
-                                <span className="text-gray-500">123 Tradition Street, Kanchipuram, Tamil Nadu, India</span>
+                                <MapPin size={20} className="mr-3 text-gold-500 mt-1 flex-shrink-0" />
+                                <span className="text-gray-500">r.no 11,KLR Venture,Medchal, Telangana, India - 501401</span>
                             </li>
                             <li className="flex items-center">
-                                <Phone size={20} className="mr-3 text-gold-500" />
-                                <span className="text-gray-500">+91 98765 43210</span>
+                                <Phone size={20} className="mr-3 text-gold-500 flex-shrink-0" />
+                                <span className="text-gray-500">+91 9494572676</span>
                             </li>
                             <li className="flex items-center">
-                                <Mail size={20} className="mr-3 text-gold-500" />
-                                <span className="text-gray-500">hello@kanchivastra.com</span>
+                                <Mail size={20} className="mr-3 text-gold-500 flex-shrink-0" />
+                                <span className="text-gray-500">aaradhana7571@gmail.com</span>
                             </li>
                         </ul>
                     </div>

@@ -104,14 +104,14 @@ const CategoryList = () => {
     );
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start animate-fadeIn">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start animate-fadeIn">
 
             {/* Left Column: List */}
-            <div className="lg:col-span-2 space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="lg:col-span-2 space-y-4 lg:space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 lg:gap-4">
                     <div>
-                        <h2 className="text-xl font-bold text-zinc-900">Categories</h2>
-                        <p className="text-sm text-zinc-500">Manage your product classifications</p>
+                        <h2 className="text-lg lg:text-xl font-bold text-zinc-900">Categories</h2>
+                        <p className="text-xs lg:text-sm text-zinc-500">Manage your product classifications</p>
                     </div>
                     <div className="relative w-full sm:w-64">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
@@ -131,49 +131,49 @@ const CategoryList = () => {
                         <p className="text-sm font-medium">Loading categories...</p>
                     </div>
                 ) : filteredCategories.length === 0 ? (
-                    <div className="bg-white rounded-xl border border-dashed border-gray-200 p-12 text-center">
+                    <div className="bg-white rounded-xl border border-dashed border-gray-200 p-8 lg:p-12 text-center">
                         <FolderOpen size={48} className="mx-auto text-gray-300 mb-4" />
                         <h3 className="text-zinc-900 font-bold mb-1">No categories found</h3>
                         <p className="text-zinc-500 text-sm">Create a new category to get started.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
                         {filteredCategories.map(item => (
-                            <div key={item._id || item.id} className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-amber-500/30 hover:shadow-lg hover:shadow-zinc-100 transition-all flex flex-col justify-between h-full">
+                            <div key={item._id || item.id} className="group bg-white p-4 lg:p-5 rounded-xl border border-gray-200 hover:border-amber-500/30 hover:shadow-lg hover:shadow-zinc-100 transition-all flex flex-col justify-between h-full">
                                 <div>
                                     <div className="flex items-start justify-between mb-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2.5 bg-zinc-50 rounded-lg text-zinc-500 group-hover:bg-amber-50 group-hover:text-amber-600 transition-colors">
-                                                <Layers size={20} />
+                                        <div className="flex items-center gap-2 lg:gap-3">
+                                            <div className="p-2 lg:p-2.5 bg-zinc-50 rounded-lg text-zinc-500 group-hover:bg-amber-50 group-hover:text-amber-600 transition-colors">
+                                                <Layers size={18} className="lg:w-5 lg:h-5" />
                                             </div>
-                                            <h3 className="font-bold text-zinc-900 text-lg">{item.name}</h3>
+                                            <h3 className="font-bold text-zinc-900 text-base lg:text-lg">{item.name}</h3>
                                         </div>
-                                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${item.isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-gray-50 text-gray-500 border-gray-100'}`}>
+                                        <span className={`px-2 lg:px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${item.isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-gray-50 text-gray-500 border-gray-100'}`}>
                                             {item.isActive ? 'Active' : 'Inactive'}
                                         </span>
                                     </div>
-                                    <p className="text-sm text-zinc-500 line-clamp-2 min-h-[2.5rem] mb-2 leading-relaxed">
+                                    <p className="text-xs lg:text-sm text-zinc-500 line-clamp-2 min-h-[2.5rem] mb-2 leading-relaxed">
                                         {item.description || 'No description provided.'}
                                     </p>
-                                    <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4">
+                                    <div className="text-[10px] lg:text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4">
                                         ID: {(item._id || item.id).substring(0, 8)}...
                                     </div>
                                 </div>
 
-                                <div className="pt-4 border-t border-gray-50 flex items-center justify-end gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                                <div className="pt-3 lg:pt-4 border-t border-gray-50 flex items-center justify-end gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
                                     <button
                                         onClick={() => startEdit(item)}
                                         className="p-2 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-all"
                                         title="Edit"
                                     >
-                                        <Edit2 size={18} />
+                                        <Edit2 size={16} className="lg:w-[18px] lg:h-[18px]" />
                                     </button>
                                     <button
                                         onClick={() => handleDelete(item._id || item.id)}
                                         className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                                         title="Delete"
                                     >
-                                        <Trash2 size={18} />
+                                        <Trash2 size={16} className="lg:w-[18px] lg:h-[18px]" />
                                     </button>
                                 </div>
                             </div>
@@ -184,7 +184,7 @@ const CategoryList = () => {
 
             {/* Right Column: Form */}
             <div className="lg:col-span-1">
-                <div className="bg-white rounded-xl shadow-xl shadow-zinc-200/50 border border-gray-200 overflow-hidden sticky top-6">
+                <div className="bg-white rounded-xl shadow-xl shadow-zinc-200/50 border border-gray-200 overflow-hidden lg:sticky lg:top-6">
                     <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
                         <h3 className="font-bold text-zinc-900 flex items-center gap-2">
                             {isEditing ? <Edit2 size={16} /> : <Plus size={16} />}
