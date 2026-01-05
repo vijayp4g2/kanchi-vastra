@@ -81,7 +81,16 @@ const uploadImage = async (formData, token) => {
         },
         body: formData,
     });
-    if (!response.ok) throw new Error('Image upload failed');
+    if (!response.ok) {
+        let errorMsg = 'Image upload failed';
+        try {
+            const error = await response.json();
+            errorMsg = error.message || errorMsg;
+        } catch (e) {
+            // Not JSON or other error
+        }
+        throw new Error(errorMsg);
+    }
     return response.text();
 };
 
