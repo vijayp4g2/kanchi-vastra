@@ -77,10 +77,15 @@ const ProductCard = ({ product }) => {
                     </div>
                 </div>
 
-                <div className="mt-2 text-center">
-                    <p className="text-xs text-gold-600 uppercase tracking-widest mb-1">{product.category}</p>
-                    <h3 className="font-serif text-lg text-gray-900 truncate group-hover:text-gold-600 transition-colors">{product.name}</h3>
-                    <p className="font-medium text-gray-600 mt-1">₹{product.price.toLocaleString()}</p>
+                <div className="mt-2 text-center px-2">
+                    <p className="text-[10px] text-maroon-600 uppercase tracking-widest font-bold mb-1 opacity-80">{product.category}</p>
+                    <h3 className="font-serif text-lg text-gray-900 truncate group-hover:text-maroon-600 transition-colors duration-300 px-2">{product.name}</h3>
+                    <div className="flex items-center justify-center gap-2 mt-1">
+                        <p className="font-bold text-maroon-800">₹{product.price.toLocaleString()}</p>
+                        {product.oldPrice && (
+                            <p className="text-sm text-gray-400 line-through font-light">₹{product.oldPrice.toLocaleString()}</p>
+                        )}
+                    </div>
                 </div>
             </Link >
         </div >
