@@ -32,6 +32,7 @@ const ProductForm = ({ onClose, initialData = null, defaultCategory = '', defaul
 
     const [images, setImages] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
 
     useEffect(() => {
         if (initialData) {
@@ -46,7 +47,14 @@ const ProductForm = ({ onClose, initialData = null, defaultCategory = '', defaul
             });
 
             if (initialData.images && Array.isArray(initialData.images)) {
-                setImages(initialData.images.map(url => ({ file: null, preview: url, isExisting: true })));
+                setImages(initialData.images.map(img => {
+                    // Handle Cloudinary object format
+                    if (typeof img === 'object' && img.url) {
+                        return { file: null, preview: img, isExisting: true };
+                    }
+                    // Handle legacy string format
+                    return { file: null, preview: img, isExisting: true };
+                }));
             } else if (initialData.image) {
                 setImages([{ file: null, preview: initialData.image, isExisting: true }]);
             }
@@ -95,14 +103,38 @@ const ProductForm = ({ onClose, initialData = null, defaultCategory = '', defaul
         try {
             // Upload new images
             const finalImageUrls = [];
-            images.filter(img => img.isExisting).forEach(img => finalImageUrls.push(img.preview));
 
+            // Keep existing images (already have url and public_id)
+            images.filter(img => img.isExisting).forEach(img => {
+                // Check if it's already in Cloudinary format
+                if (typeof img.preview === 'object' && img.preview.url) {
+                    finalImageUrls.push(img.preview);
+                } else if (typeof img.preview === 'string') {
+                    // Legacy format - convert to Cloudinary format
+                    finalImageUrls.push({
+                        url: img.preview,
+                        public_id: 'legacy_' + Date.now()
+                    });
+                }
+            });
+
+            // Upload new images to Cloudinary with progress tracking
             const newImageFiles = images.filter(img => !img.isExisting);
-            for (const imgObj of newImageFiles) {
-                const uploadData = new FormData();
-                uploadData.append('image', imgObj.file);
-                const url = await api.uploadImage(uploadData, user.token);
-                finalImageUrls.push(url);
+            if (newImageFiles.length > 0) {
+                setUploadProgress({ current: 0, total: newImageFiles.length });
+
+                for (let i = 0; i < newImageFiles.length; i++) {
+                    const imgObj = newImageFiles[i];
+                    setUploadProgress({ current: i + 1, total: newImageFiles.length });
+
+                    const uploadData = new FormData();
+                    uploadData.append('image', imgObj.file);
+                    const cloudinaryResponse = await api.uploadImage(uploadData, user.token);
+                    // cloudinaryResponse now contains { url, public_id }
+                    finalImageUrls.push(cloudinaryResponse);
+                }
+
+                setUploadProgress({ current: 0, total: 0 });
             }
 
             const payload = {
@@ -130,6 +162,7 @@ const ProductForm = ({ onClose, initialData = null, defaultCategory = '', defaul
             addToast(error.message || 'Failed to save product', 'error');
         } finally {
             setIsSubmitting(false);
+            setUploadProgress({ current: 0, total: 0 });
         }
     };
 
@@ -167,19 +200,26 @@ const ProductForm = ({ onClose, initialData = null, defaultCategory = '', defaul
                         <div className="space-y-4">
                             <label className="block text-sm font-bold text-zinc-700">Product Images</label>
                             <div className="grid grid-cols-5 gap-3">
-                                {images.map((img, idx) => (
-                                    <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
-                                        <img src={img.preview} alt="Upload preview" className="w-full h-full object-cover" />
-                                        <button
-                                            type="button"
-                                            onClick={() => removeImage(idx)}
-                                            className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                        {idx === 0 && <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-black/70 text-white text-[10px] font-bold rounded">Cover</div>}
-                                    </div>
-                                ))}
+                                {images.map((img, idx) => {
+                                    // Extract URL from either Cloudinary object or string
+                                    const imageUrl = typeof img.preview === 'object' && img.preview.url
+                                        ? img.preview.url
+                                        : img.preview;
+
+                                    return (
+                                        <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
+                                            <img src={imageUrl} alt="Upload preview" className="w-full h-full object-cover" />
+                                            <button
+                                                type="button"
+                                                onClick={() => removeImage(idx)}
+                                                className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                            {idx === 0 && <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-black/70 text-white text-[10px] font-bold rounded">Cover</div>}
+                                        </div>
+                                    );
+                                })}
                                 {images.length < 5 && (
                                     <button
                                         type="button"
@@ -324,7 +364,15 @@ const ProductForm = ({ onClose, initialData = null, defaultCategory = '', defaul
                         disabled={isSubmitting}
                         className="flex items-center gap-2 px-6 py-2.5 bg-zinc-900 text-white rounded-lg font-bold text-sm hover:bg-zinc-800 disabled:opacity-70 disabled:cursor-not-allowed transition-all shadow-lg shadow-zinc-900/10"
                     >
-                        {isSubmitting ? 'Saving...' : (initialData ? 'Update Item' : 'Create Item')}
+                        {isSubmitting ? (
+                            uploadProgress.total > 0 ? (
+                                `Uploading ${uploadProgress.current}/${uploadProgress.total}...`
+                            ) : (
+                                'Saving...'
+                            )
+                        ) : (
+                            initialData ? 'Update Item' : 'Create Item'
+                        )}
                     </button>
                 </div>
             </div>

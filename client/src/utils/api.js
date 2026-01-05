@@ -1,10 +1,27 @@
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
-const transformProduct = (p) => ({
-    ...p,
-    id: p._id,
-    image: (p.images && p.images.length > 0) ? p.images[0] : (p.image || '')
-});
+const transformProduct = (p) => {
+    // Handle images - support both old string format and new Cloudinary object format
+    let imageUrl = '';
+    if (p.images && p.images.length > 0) {
+        const firstImage = p.images[0];
+        // Check if it's a Cloudinary object with url property
+        if (typeof firstImage === 'object' && firstImage.url) {
+            imageUrl = firstImage.url;
+        } else if (typeof firstImage === 'string') {
+            // Legacy string format
+            imageUrl = firstImage;
+        }
+    } else if (p.image) {
+        imageUrl = p.image;
+    }
+
+    return {
+        ...p,
+        id: p._id,
+        image: imageUrl
+    };
+};
 
 const getProducts = async (params = {}) => {
     const query = new URLSearchParams(params).toString();
@@ -91,7 +108,8 @@ const uploadImage = async (formData, token) => {
         }
         throw new Error(errorMsg);
     }
-    return response.text();
+    // Return the full JSON response with url and public_id
+    return response.json();
 };
 
 const login = async (email, password) => {

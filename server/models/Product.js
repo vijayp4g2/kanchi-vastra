@@ -25,8 +25,27 @@ const productSchema = new mongoose.Schema({
         type: String
     },
     images: {
-        type: [String],
+        type: [{
+            url: {
+                type: String,
+                required: true
+            },
+            public_id: {
+                type: String,
+                required: true
+            }
+        }],
         default: []
+    },
+    stock: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    status: {
+        type: String,
+        enum: ['Active', 'Inactive'],
+        default: 'Active'
     },
     inStock: {
         type: Boolean,
