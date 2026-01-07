@@ -8,8 +8,14 @@ import { useCart } from '../../context/CartContext';
 const QuickViewModal = () => {
     const { isOpen, selectedProduct, closeQuickView } = useQuickView();
     const { addToCart } = useCart();
+    const [selectedSize, setSelectedSize] = React.useState('2.4');
 
     if (!selectedProduct) return null;
+
+    const handleAddToCart = () => {
+        addToCart({ ...selectedProduct, selectedSize });
+        // closeQuickView();
+    };
 
     return (
         <AnimatePresence>
@@ -74,28 +80,41 @@ const QuickViewModal = () => {
                                         <p className="text-2xl font-medium text-gray-900">
                                             ₹{selectedProduct.price.toLocaleString()}
                                         </p>
-                                        <div className="flex items-center gap-1">
-                                            {[1, 2, 3, 4, 5].map((star) => (
-                                                <Star key={star} size={14} className="fill-gold-400 text-gold-400" />
-                                            ))}
-                                            <span className="text-xs text-gray-400 ml-1">(12 reviews)</span>
-                                        </div>
                                     </div>
-                                    <p className="text-gray-600 leading-relaxed line-clamp-3">
+                                    <p className="text-gray-600 leading-relaxed line-clamp-2 text-sm">
                                         Experience the timeless elegance of this handwoven masterpiece.
-                                        Crafted with precision and care, this {selectedProduct.category} embodies
-                                        traditional artistry and modern sophistication.
+                                        Crafted with precision, this {selectedProduct.category} embodies
+                                        traditional artistry.
                                     </p>
                                 </div>
 
-                                <div className="space-y-4 pt-6 border-t border-gray-100">
+                                {/* Bangle specific options in Quick View */}
+                                {selectedProduct.category === 'Bangles' && (
+                                    <div className="mb-6 space-y-4">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Select Size</span>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            {['2.4', '2.6', '2.8'].map(size => (
+                                                <button
+                                                    key={size}
+                                                    onClick={() => setSelectedSize(size)}
+                                                    className={`w-12 h-12 rounded-xl border-2 text-xs font-bold transition-all duration-300 ${selectedSize === size
+                                                        ? 'border-maroon-600 bg-maroon-50 text-maroon-600'
+                                                        : 'border-stone-100 text-stone-400 hover:border-maroon-200'}`}
+                                                >
+                                                    {size}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="space-y-4 pt-6 border-t border-stone-100">
                                     <div className="flex gap-3">
                                         <button
-                                            onClick={() => {
-                                                addToCart(selectedProduct);
-                                                // Optional: closeQuickView(); 
-                                            }}
-                                            className="flex-1 bg-gray-900 text-white py-4 px-6 rounded-xl font-medium hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 group"
+                                            onClick={handleAddToCart}
+                                            className="flex-1 bg-maroon-700 text-white py-4 px-6 rounded-xl font-bold hover:bg-maroon-800 transition-all flex items-center justify-center gap-2 group shadow-lg shadow-maroon-100"
                                         >
                                             <ShoppingCart size={18} className="group-hover:scale-110 transition-transform" />
                                             Add to Cart

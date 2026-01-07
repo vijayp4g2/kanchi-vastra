@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Eye, Heart } from 'lucide-react';
+import { ShoppingCart, Eye, Heart, Sparkles } from 'lucide-react';
 import { useQuickView } from '../../context/QuickViewContext';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
@@ -26,28 +26,25 @@ const ProductCard = ({ product }) => {
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
 
-                    {product.isNewArrival && (
-                        <span className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 text-xs uppercase tracking-widest font-medium text-gray-900 rounded-full z-10">
-                            New
-                        </span>
-                    )}
+                    <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
+                        {product.isNewArrival && (
+                            <span className="bg-white text-gray-900 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm">
+                                New
+                            </span>
+                        )}
 
-                    {(product.isHandmade || product.subCategory === 'Handmade') && (
-                        <span className={`absolute ${product.isNewArrival ? 'top-12' : 'top-4'} left-4 bg-amber-100/90 backdrop-blur-sm px-3 py-1 text-[10px] uppercase tracking-widest font-bold text-amber-800 rounded-full z-10`}>
-                            Handmade
-                        </span>
-                    )}
+                        {(product.isHandmade || product.subCategory === 'Handmade') && (
+                            <span className="bg-amber-400 text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm flex items-center gap-1">
+                                <Sparkles size={10} /> Handmade
+                            </span>
+                        )}
 
-                    {product.saleType === 'Pack' && (
-                        <span className={`absolute ${product.isNewArrival && (product.isHandmade || product.subCategory === 'Handmade')
-                                ? 'top-20'
-                                : (product.isNewArrival || product.isHandmade || product.subCategory === 'Handmade')
-                                    ? 'top-12'
-                                    : 'top-4'
-                            } left-4 bg-zinc-800/90 backdrop-blur-sm px-3 py-1 text-[10px] uppercase tracking-widest font-bold text-white rounded-full z-10`}>
-                            Packs
-                        </span>
-                    )}
+                        {product.saleType === 'Pack' && (
+                            <span className="bg-zinc-900 text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm">
+                                Pack of {product.packOptions?.[0]?.bangleCount || 'Set'}
+                            </span>
+                        )}
+                    </div>
 
                     <button
                         onClick={(e) => {

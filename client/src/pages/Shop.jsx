@@ -391,9 +391,29 @@ const Shop = () => {
                             </AnimatePresence>
                         )}
                     </div>
-
                 </div>
             </div>
+
+            {/* Recommendations Section */}
+            {!loading && products && products.length > 0 && (
+                <div className="container mx-auto px-4 py-24 border-t border-stone-200 mt-16">
+                    <div className="flex flex-col items-center mb-12">
+                        <span className="text-gold-600 font-medium text-sm tracking-[0.3em] uppercase mb-3">You might also like</span>
+                        <h2 className="text-3xl md:text-4xl font-serif text-gray-900 mb-4">Recommended for You</h2>
+                        <div className="h-1 w-20 bg-gold-500 rounded-full"></div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {products
+                            .filter(p => p.category !== 'Bangles') // Exclude bangles from shop recommendations
+                            .sort(() => 0.5 - Math.random()) // Shuffle
+                            .slice(0, 4) // Take 4
+                            .map(product => (
+                                <ProductCard key={product.id} product={product} />
+                            ))
+                        }
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

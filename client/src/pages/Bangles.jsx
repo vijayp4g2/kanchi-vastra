@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, ArrowRight, Filter, Truck, Shield, Clock } from 'lucide-react';
+import { Sparkles, ArrowRight, Filter, Shield, Clock } from 'lucide-react';
 import api from '../utils/api';
+import { useProduct } from '../context/ProductContext';
 import ProductCard from '../components/product/ProductCard';
 
 const fadeInUp = {
@@ -20,6 +21,7 @@ const staggerContainer = {
 };
 
 const Bangles = () => {
+    const { products } = useProduct();
     const [bangleCollections, setBangleCollections] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -195,36 +197,6 @@ const Bangles = () => {
                 </motion.div>
             </section>
 
-            {/* Features Bar - Integrated Design */}
-            <div className="relative z-20 -mt-10 mb-10 px-6">
-                <div className="max-w-6xl mx-auto">
-                    <div className="bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-stone-100 py-10 px-8">
-                        <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-stone-100">
-                            <div className="flex flex-col items-center text-center px-4 py-6 md:py-0">
-                                <div className="w-12 h-12 bg-gold-50 rounded-full flex items-center justify-center mb-4 text-gold-600">
-                                    <Truck size={24} />
-                                </div>
-                                <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-widest mb-2">Secure Delivery</h4>
-                                <p className="text-xs text-stone-500 max-w-[200px]">Handled with care and delivered to your doorstep safely.</p>
-                            </div>
-                            <div className="flex flex-col items-center text-center px-4 py-6 md:py-0">
-                                <div className="w-12 h-12 bg-gold-50 rounded-full flex items-center justify-center mb-4 text-gold-600">
-                                    <Shield size={24} />
-                                </div>
-                                <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-widest mb-2">Pure Materials</h4>
-                                <p className="text-xs text-stone-500 max-w-[200px]">Only the finest silk and skin-friendly base materials.</p>
-                            </div>
-                            <div className="flex flex-col items-center text-center px-4 py-6 md:py-0">
-                                <div className="w-12 h-12 bg-gold-50 rounded-full flex items-center justify-center mb-4 text-gold-600">
-                                    <Clock size={24} />
-                                </div>
-                                <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-widest mb-2">Handmade Art</h4>
-                                <p className="text-xs text-stone-500 max-w-[200px]">Every piece is handcrafted over hours of patient work.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             {/* Content Area */}
             <section id="collection-grid" className="py-16 px-4 md:px-8 max-w-7xl mx-auto">
@@ -408,6 +380,83 @@ const Bangles = () => {
                                     Join List <ArrowRight size={18} />
                                 </button>
                             </form>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Recommendations Section */}
+                {products && products.length > 0 && (
+                    <div className="mt-32 pt-24 border-t border-stone-100">
+                        <div className="flex flex-col items-center mb-16">
+                            <span className="text-gold-600 font-medium text-sm tracking-[0.3em] uppercase mb-4 block">Complete Your Ensemble</span>
+                            <h2 className="text-4xl font-serif text-gray-900 mb-4">Recommended for You</h2>
+                            <div className="h-1.5 w-24 bg-gold-400 rounded-full"></div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                            {products
+                                .filter(p => !p.category || p.category !== 'Bangles') // Recommend non-bangles
+                                .sort(() => 0.5 - Math.random())
+                                .slice(0, 4)
+                                .map(product => (
+                                    <ProductCard key={product.id || product._id} product={product} />
+                                ))
+                            }
+                        </div>
+                        <div className="text-center mt-12">
+                            <button
+                                onClick={() => window.location.href = '/shop'}
+                                className="inline-flex items-center gap-2 text-stone-600 font-medium hover:text-gold-600 transition-colors uppercase tracking-widest text-xs"
+                            >
+                                View full saree collection <ArrowRight size={16} />
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Quality Assurance Section */}
+                <div className="mt-32 bg-white rounded-[3rem] p-12 md:p-20 shadow-xl border border-stone-100 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-gold-50/50 rounded-full blur-3xl -mr-48 -mt-48"></div>
+                    <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                        <div>
+                            <span className="text-gold-600 font-bold text-xs uppercase tracking-[0.3em] mb-4 block">Our Promise</span>
+                            <h2 className="text-4xl md:text-5xl font-serif text-gray-900 mb-8 leading-tight">Authenticity in every <br />single thread.</h2>
+                            <p className="text-gray-500 font-light leading-relaxed mb-10 text-lg">
+                                Each bangle set undergoes a rigorous 3-step quality check. We ensure that the silk is pure, the stone setting is secure, and the base is skin-friendly.
+                            </p>
+                            <div className="flex flex-wrap gap-8">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 rounded-full bg-gold-100 flex items-center justify-center text-gold-700">
+                                        <Shield size={24} />
+                                    </div>
+                                    <span className="font-bold text-gray-900">Certified <br />Quality</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 rounded-full bg-gold-100 flex items-center justify-center text-gold-700">
+                                        <Clock size={24} />
+                                    </div>
+                                    <span className="font-bold text-gray-900">Ethical <br />Sourcing</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="relative">
+                            <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
+                                <img
+                                    src="https://images.unsplash.com/photo-1610030469668-93530c176cc0?q=80&w=1200&auto=format&fit=crop"
+                                    alt="Quality check"
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                            <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-2xl shadow-xl border border-stone-100 hidden md:block">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-green-600">
+                                        <Shield size={24} />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-black uppercase tracking-widest text-gray-400">Status</p>
+                                        <p className="text-sm font-bold text-gray-900">Quality Verified</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

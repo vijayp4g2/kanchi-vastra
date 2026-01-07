@@ -107,7 +107,7 @@ const ProductDetail = () => {
         );
     }
 
-    const images = product.images && product.images.length > 0 
+    const images = product.images && product.images.length > 0
         ? product.images.map(img => (typeof img === 'object' && img.url) ? img.url : img)
         : [product.image];
 
@@ -216,16 +216,6 @@ const ProductDetail = () => {
 
                         <div className="flex items-center gap-6 mb-8">
                             <span className="text-4xl font-bold text-maroon-800">₹{(selectedPack ? selectedPack.price : product.price).toLocaleString()}</span>
-                            <div className="h-8 w-px bg-stone-200"></div>
-                            <div className="flex flex-col">
-                                <div className="flex items-center gap-1 text-gold-500">
-                                    {[1, 2, 3, 4, 5].map((s) => (
-                                        <Star key={s} fill={s <= 4 ? "currentColor" : "none"} size={16} />
-                                    ))}
-                                    <span className="text-gray-900 font-bold text-sm ml-2">4.8</span>
-                                </div>
-                                <span className="text-gray-400 text-xs mt-0.5">124 Verified Reviews</span>
-                            </div>
                         </div>
 
                         <p className="text-gray-600 leading-relaxed mb-8 text-lg font-light">
@@ -239,55 +229,42 @@ const ProductDetail = () => {
                             {product.saleType === 'Pack' && product.packOptions && (
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
-                                        <span className="font-bold text-gray-900 uppercase tracking-widest text-xs">Select Pack Size</span>
-                                        {selectedPack && <span className="text-xs text-maroon-600 font-medium">Bangles in pack: {selectedPack.bangleCount}</span>}
+                                        <span className="font-bold text-gray-900 uppercase tracking-widest text-xs">Choose Collection Size</span>
+                                        {selectedPack && <span className="text-xs text-maroon-600 font-medium">Qty: {selectedPack.bangleCount} pieces</span>}
                                     </div>
-                                    <div className="flex flex-col gap-3">
+                                    <div className="grid grid-cols-1 gap-3">
                                         {product.packOptions.map((pack, idx) => (
-                                            <label
+                                            <div
                                                 key={idx}
-                                                className={`relative flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${selectedPack === pack
-                                                    ? 'border-maroon-600 bg-maroon-50/50'
-                                                    : 'border-stone-200 hover:border-maroon-200'
+                                                onClick={() => setSelectedPack(pack)}
+                                                className={`group relative flex items-center justify-between p-4 rounded-2xl border-2 transition-all duration-300 cursor-pointer overflow-hidden ${selectedPack === pack
+                                                    ? 'border-maroon-600 bg-maroon-50/30'
+                                                    : 'border-stone-100 hover:border-maroon-200 bg-white'
                                                     }`}
                                             >
-                                                <input
-                                                    type="radio"
-                                                    name="pack"
-                                                    className="hidden"
-                                                    checked={selectedPack === pack}
-                                                    onChange={() => setSelectedPack(pack)}
-                                                />
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPack === pack ? 'border-maroon-600' : 'border-gray-300'
-                                                        }`}>
-                                                        {selectedPack === pack && <div className="w-2.5 h-2.5 rounded-full bg-maroon-600" />}
+                                                <div className="flex items-center gap-4 relative z-10">
+                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${selectedPack === pack ? 'bg-maroon-600 text-white' : 'bg-stone-100 text-stone-400 group-hover:bg-maroon-100'}`}>
+                                                        <ShoppingBag size={18} />
                                                     </div>
                                                     <div>
-                                                        <span className={`block font-bold ${selectedPack === pack ? 'text-maroon-900' : 'text-gray-700'}`}>
+                                                        <span className={`block font-bold tracking-tight ${selectedPack === pack ? 'text-maroon-900' : 'text-gray-900'}`}>
                                                             {pack.packLabel}
                                                         </span>
-                                                        <span className="text-xs text-gray-500">
-                                                            {pack.bangleCount} Bangles
+                                                        <span className="text-xs text-gray-500 font-medium">
+                                                            {pack.bangleCount} Hand-woven pieces
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <div className="text-right">
-                                                    <span className={`block font-bold ${selectedPack === pack ? 'text-maroon-900' : 'text-gray-900'}`}>
+
+                                                <div className="text-right relative z-10">
+                                                    <span className={`block text-lg font-black ${selectedPack === pack ? 'text-maroon-700' : 'text-gray-900'}`}>
                                                         ₹{pack.price.toLocaleString()}
                                                     </span>
-                                                    {pack.isPopular && (
-                                                        <span className="text-[10px] text-amber-600 font-bold uppercase tracking-wider flex items-center justify-end gap-1">
-                                                            <Star size={10} fill="currentColor" /> Most Popular
-                                                        </span>
-                                                    )}
+                                                    <span className="text-[10px] text-stone-400 uppercase tracking-tighter">Per Set</span>
                                                 </div>
-                                            </label>
+                                            </div>
                                         ))}
                                     </div>
-                                    <p className="text-xs text-gray-500 italic bg-stone-50 p-3 rounded-lg border border-stone-100">
-                                        All bangles in the pack are of the same design & size.
-                                    </p>
                                 </div>
                             )}
 
@@ -295,23 +272,30 @@ const ProductDetail = () => {
                             {product.category === 'Bangles' && (
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
-                                        <span className="font-bold text-gray-900 uppercase tracking-widest text-xs">Select Size</span>
-                                        <button className="text-maroon-600 text-xs font-bold hover:underline">Size Guide</button>
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-gray-900 uppercase tracking-widest text-xs">Inner Diameter (Size)</span>
+                                            <span className="text-[10px] text-gray-500 font-medium mt-0.5 italic">Standard Indian Sizing</span>
+                                        </div>
+                                        <button className="text-maroon-600 text-[10px] font-black uppercase tracking-widest border-b border-maroon-200 hover:border-maroon-600 transition-all font-sans">Size Chart</button>
                                     </div>
-                                    <div className="flex flex-wrap gap-3">
+                                    <div className="grid grid-cols-5 gap-2">
                                         {bangleSizes.map((size) => (
                                             <button
                                                 key={size}
                                                 onClick={() => setSelectedSize(size)}
-                                                className={`h-12 w-16 flex items-center justify-center rounded-lg font-medium transition-all ${selectedSize === size
-                                                    ? 'bg-maroon-700 text-white shadow-lg ring-4 ring-maroon-100'
-                                                    : 'bg-white border border-stone-200 text-gray-600 hover:border-maroon-300'
+                                                className={`relative h-14 flex flex-col items-center justify-center rounded-xl transition-all duration-300 font-sans ${selectedSize === size
+                                                    ? 'bg-maroon-700 text-white shadow-xl scale-105 z-10'
+                                                    : 'bg-white border border-stone-100 text-stone-600 hover:border-maroon-200'
                                                     }`}
                                             >
-                                                {size}
+                                                <span className="text-sm font-black leading-none">{size}</span>
+                                                <span className={`text-[8px] mt-1 uppercase tracking-tighter ${selectedSize === size ? 'text-maroon-200' : 'text-stone-400'}`}>Size</span>
                                             </button>
                                         ))}
                                     </div>
+                                    <p className="text-[10px] text-stone-400 bg-stone-50 px-3 py-2 rounded-lg leading-relaxed italic">
+                                        * Not sure? Measure your old bangle's inner diameter for a perfect fit.
+                                    </p>
                                 </div>
                             )}
 
@@ -372,141 +356,74 @@ const ProductDetail = () => {
                             </div>
                         </div>
 
-                        {/* Info Accordions */}
-                        <div className="space-y-4">
-                            {['Product Details', 'Shipping & Returns', 'Care Instructions'].map((tab) => (
-                                <div key={tab} className="border-b border-stone-200 pb-4">
-                                    <button
-                                        onClick={() => setActiveTab(activeTab === tab ? '' : tab)}
-                                        className="w-full py-2 flex justify-between items-center text-left transition-colors group"
-                                    >
-                                        <span className={`font-serif text-xl ${activeTab === tab ? 'text-maroon-700 font-bold' : 'text-gray-800 group-hover:text-maroon-600'}`}>{tab}</span>
-                                        <div className={`p-1 rounded-full transition-all ${activeTab === tab ? 'bg-maroon-50 text-maroon-700 rotate-90' : 'text-gray-400'}`}>
-                                            <ChevronRight size={18} />
-                                        </div>
-                                    </button>
+                        {/* Info Accordions - Hidden for Bangles per user request */}
+                        {product.category !== 'Bangles' && (
+                            <div className="space-y-4 mt-12 bg-white rounded-2xl p-4 shadow-sm border border-stone-100">
+                                {['Product Details', 'Shipping & Returns', 'Care Instructions'].map((tab) => (
+                                    <div key={tab} className="border-b last:border-0 border-stone-100 pb-4">
+                                        <button
+                                            onClick={() => setActiveTab(activeTab === tab ? '' : tab)}
+                                            className="w-full py-2 flex justify-between items-center text-left transition-colors group"
+                                        >
+                                            <span className={`font-serif text-lg ${activeTab === tab ? 'text-maroon-700 font-bold' : 'text-gray-800 group-hover:text-maroon-600'}`}>{tab}</span>
+                                            <div className={`p-1 rounded-full transition-all ${activeTab === tab ? 'bg-maroon-50 text-maroon-700 rotate-90' : 'text-gray-400'}`}>
+                                                <ChevronRight size={18} />
+                                            </div>
+                                        </button>
 
-                                    <AnimatePresence>
-                                        {activeTab === tab && (
-                                            <motion.div
-                                                initial={{ height: 0, opacity: 0 }}
-                                                animate={{ height: 'auto', opacity: 1 }}
-                                                exit={{ height: 0, opacity: 0 }}
-                                                className="overflow-hidden"
-                                            >
-                                                <div className="py-4 text-gray-600 leading-relaxed text-sm">
-                                                    {tab === 'Product Details' && (
-                                                        <ul className="grid grid-cols-2 gap-y-3">
-                                                            <li className="flex flex-col">
-                                                                <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Material</span>
-                                                                <span className="font-medium text-gray-900">Pure Silk & Thread</span>
-                                                            </li>
-                                                            <li className="flex flex-col">
-                                                                <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Work</span>
-                                                                <span className="font-medium text-gray-900">Zari & Stones</span>
-                                                            </li>
-                                                            <li className="flex flex-col">
-                                                                <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Craft</span>
-                                                                <span className="font-medium text-gray-900">Hand-woven</span>
-                                                            </li>
-                                                            <li className="flex flex-col">
-                                                                <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Origin</span>
-                                                                <span className="font-medium text-gray-900">Kanchipuram</span>
-                                                            </li>
-                                                        </ul>
-                                                    )}
-                                                    {tab === 'Shipping & Returns' && (
-                                                        <p>
-                                                            Enjoy complimentary express shipping across India on orders above ₹5000.
-                                                            Standard shipping takes 5-7 business days.
-                                                            We offer a seamless 7-day return policy for unused items in their original packaging.
-                                                        </p>
-                                                    )}
-                                                    {tab === 'Care Instructions' && (
-                                                        <ul className="list-disc list-inside space-y-2">
-                                                            <li>Avoid direct contact with perfumes and water.</li>
-                                                            <li>Store in the provided luxury box or a soft muslin cloth.</li>
-                                                            <li>Clean gently with a dry cotton cloth after use.</li>
-                                                            <li>Keep away from extreme heat or sunlight.</li>
-                                                        </ul>
-                                                    )}
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
-                            ))}
-                        </div>
-                    </motion.div>
-                </div>
-
-                {/* Customer Reviews Section */}
-                <div className="mt-32 pt-16 border-t border-stone-200">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
-                        <div className="space-y-6">
-                            <h2 className="text-3xl font-serif text-gray-900">Customer Reviews</h2>
-                            <div className="flex items-center gap-4">
-                                <span className="text-6xl font-bold text-maroon-800">4.8</span>
-                                <div>
-                                    <div className="flex items-center gap-1 text-gold-500">
-                                        {[1, 2, 3, 4, 5].map((s) => (
-                                            <Star key={s} fill={s <= 4 ? "currentColor" : "none"} size={20} />
-                                        ))}
-                                    </div>
-                                    <p className="text-sm text-gray-500 mt-1">Based on 124 reviews</p>
-                                </div>
-                            </div>
-                            <div className="space-y-3">
-                                {[5, 4, 3, 2, 1].map((rating) => (
-                                    <div key={rating} className="flex items-center gap-4">
-                                        <span className="text-xs font-bold text-gray-600 w-4">{rating}</span>
-                                        <div className="flex-1 h-2 bg-stone-100 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-maroon-600 rounded-full"
-                                                style={{ width: `${rating === 5 ? 85 : rating === 4 ? 10 : 5}%` }}
-                                            />
-                                        </div>
-                                        <span className="text-xs text-gray-400 w-8">{rating === 5 ? '85%' : rating === 4 ? '10%' : '5%'}</span>
+                                        <AnimatePresence>
+                                            {activeTab === tab && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    className="overflow-hidden"
+                                                >
+                                                    <div className="py-4 text-gray-600 leading-relaxed text-sm">
+                                                        {tab === 'Product Details' && (
+                                                            <ul className="grid grid-cols-2 gap-y-3">
+                                                                <li className="flex flex-col">
+                                                                    <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Material</span>
+                                                                    <span className="font-medium text-gray-900">Pure Silk & Thread</span>
+                                                                </li>
+                                                                <li className="flex flex-col">
+                                                                    <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Work</span>
+                                                                    <span className="font-medium text-gray-900">Zari & Stones</span>
+                                                                </li>
+                                                                <li className="flex flex-col">
+                                                                    <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Craft</span>
+                                                                    <span className="font-medium text-gray-900">Hand-woven</span>
+                                                                </li>
+                                                                <li className="flex flex-col">
+                                                                    <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Origin</span>
+                                                                    <span className="font-medium text-gray-900">Kanchipuram</span>
+                                                                </li>
+                                                            </ul>
+                                                        )}
+                                                        {tab === 'Shipping & Returns' && (
+                                                            <p>
+                                                                Enjoy complimentary express shipping across India on orders above ₹5000.
+                                                                Standard shipping takes 5-7 business days.
+                                                                We offer a seamless 7-day return policy for unused items in their original packaging.
+                                                            </p>
+                                                        )}
+                                                        {tab === 'Care Instructions' && (
+                                                            <ul className="list-disc list-inside space-y-2">
+                                                                <li>Avoid direct contact with perfumes and water.</li>
+                                                                <li>Store in the provided luxury box or a soft muslin cloth.</li>
+                                                                <li>Clean gently with a dry cotton cloth after use.</li>
+                                                                <li>Keep away from extreme heat or sunlight.</li>
+                                                            </ul>
+                                                        )}
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
                                 ))}
                             </div>
-                            <button className="w-full py-4 border-2 border-maroon-700 text-maroon-700 font-bold rounded-xl hover:bg-maroon-50 transition-all">
-                                Write a Review
-                            </button>
-                        </div>
-
-                        <div className="lg:col-span-2 space-y-12">
-                            {[
-                                { name: "Anjali Sharma", rating: 5, date: "2 weeks ago", comment: "The quality of the silk thread is exceptional. It fits perfectly and the stone work is very elegant. Definitely recommend for festive occasions!", verified: true },
-                                { name: "Meera Krishnan", rating: 4, date: "1 month ago", comment: "Beautiful design. The color is slightly deeper than in the pictures, but it looks even more premium in person.", verified: true }
-                            ].map((review, i) => (
-                                <div key={i} className="space-y-4 pb-8 border-b border-stone-100 last:border-0">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <div className="flex items-center gap-1 text-gold-500 mb-1">
-                                                {[1, 2, 3, 4, 5].map((s) => (
-                                                    <Star key={s} fill={s <= review.rating ? "currentColor" : "none"} size={14} />
-                                                ))}
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="font-bold text-gray-900">{review.name}</h4>
-                                                {review.verified && (
-                                                    <span className="flex items-center gap-1 text-[10px] text-green-600 font-bold uppercase tracking-wider">
-                                                        <ShieldCheck size={12} /> Verified Purchase
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <span className="text-xs text-gray-400">{review.date}</span>
-                                    </div>
-                                    <p className="text-gray-600 leading-relaxed text-sm">{review.comment}</p>
-                                </div>
-                            ))}
-                            <button className="text-maroon-700 font-bold text-sm uppercase tracking-widest hover:underline decoration-2 underline-offset-8">
-                                Read All 124 Reviews
-                            </button>
-                        </div>
-                    </div>
+                        )}
+                    </motion.div>
                 </div>
 
                 {/* Secure Shopping Badges */}
@@ -541,13 +458,13 @@ const ProductDetail = () => {
                     </div>
                 </div>
 
-                {/* Complete the Look Section (Already refactored) */}
+                {/* Recommendations Section */}
                 {relatedProducts.length > 0 && (
-                    <div className="mt-32">
-                        <div className="flex flex-col items-center mb-12">
-                            <h2 className="text-4xl md:text-5xl font-serif text-gray-900 mb-4 tracking-tight">Complete the Look</h2>
-                            <div className="h-1.5 w-24 bg-maroon-600 rounded-full"></div>
-                            <p className="text-gray-500 mt-6 uppercase tracking-[0.3em] text-[10px] font-black">Handpicked pairings for you</p>
+                    <div className="mt-32 pt-24 border-t border-stone-100">
+                        <div className="flex flex-col items-center mb-16">
+                            <span className="text-maroon-600 font-bold text-[10px] uppercase tracking-[0.4em] mb-4 block text-center">Curated Pairings</span>
+                            <h2 className="text-4xl md:text-5xl font-serif text-gray-900 mb-6 text-center">Complete Your Collection</h2>
+                            <div className="h-1 w-20 bg-maroon-600 rounded-full"></div>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
                             {relatedProducts.map(p => (

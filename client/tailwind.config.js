@@ -37,19 +37,26 @@ export default {
           700: '#856616',
           800: '#6B5010',
           900: '#423008',
+        },
+        charcoal: {
+          50: '#F5F5F5',
+          100: '#E5E5E5',
+          200: '#CCCCCC',
+          300: '#B3B3B3',
+          400: '#808080',
+          500: '#666666',
+          600: '#4D4D4D',
+          700: '#333333', // Base Charcoal
+          800: '#1A1A1A',
+          900: '#0D0D0D',
         }
       },
       fontFamily: {
         serif: ['"Playfair Display"', 'serif'],
+        cormorant: ['"Cormorant Garamond"', 'serif'],
         sans: ['Poppins', 'sans-serif'],
       },
-      animation: {
-        'fadeIn': 'fadeIn 0.5s ease-out forwards',
-        'slideDown': 'slideDown 0.4s ease-out forwards',
-        'slideUp': 'slideUp 0.4s ease-out forwards',
-        'slideLeft': 'slideLeft 0.4s ease-out forwards',
-        'zoomIn': 'zoomIn 0.3s ease-out forwards',
-      },
+
       keyframes: {
         fadeIn: {
           '0%': { opacity: '0' },
