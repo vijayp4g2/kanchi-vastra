@@ -15,6 +15,18 @@ export const ProductProvider = ({ children }) => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [categories, setCategories] = useState([]);
+
+    const fetchCategories = async () => {
+        try {
+            const data = await api.getCategories();
+            if (data && (Array.isArray(data) || Array.isArray(data.categories))) {
+                setCategories(Array.isArray(data) ? data : data.categories);
+            }
+        } catch (err) {
+            console.error('Error fetching categories:', err);
+        }
+    };
 
     const fetchProducts = async (params = {}) => {
         setLoading(true);
@@ -24,6 +36,7 @@ export const ProductProvider = ({ children }) => {
             // This ensures frontend gets complete product inventory
             const data = await api.getProducts({
                 ...params,
+                status: params.status || 'Active', // Default to Active products for frontend
                 pageSize: params.pageSize || 1000  // Default to 1000 to get all products
             });
             // api.getProducts already transforms the data
@@ -39,10 +52,11 @@ export const ProductProvider = ({ children }) => {
 
     useEffect(() => {
         fetchProducts();
+        fetchCategories();
     }, []);
 
     return (
-        <ProductContext.Provider value={{ products, loading, error, fetchProducts }}>
+        <ProductContext.Provider value={{ products, categories, loading, error, fetchProducts, fetchCategories }}>
             {children}
         </ProductContext.Provider>
     );

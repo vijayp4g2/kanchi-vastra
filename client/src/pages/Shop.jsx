@@ -6,7 +6,7 @@ import { useProduct } from '../context/ProductContext';
 import ProductCard from '../components/product/ProductCard';
 
 const Shop = () => {
-    const { products, loading, error } = useProduct();
+    const { products, categories: adminCategories, loading, error } = useProduct();
     // URL Params for deep linking
     const [searchParams, setSearchParams] = useSearchParams();
     const initialCategory = searchParams.get('category') || 'All';
@@ -25,13 +25,18 @@ const Shop = () => {
     const [activeFilters, setActiveFilters] = useState([]);
 
     // Derived data - ensure products is available
-    // FIXED: Include ALL categories (including Bangles) in the category list
-    const categories = products && products.length > 0
-        ? ['All', ...new Set(products
-            .filter(p => p.category)
-            .map(p => p.category))]
-        : ['All'];
-    const maxPrice = products && products.length > 0 ? Math.max(...products.map(p => p.price)) : 50000;
+    // Use adminCategories for the list, fallback to products derivation if admin list is empty
+    const categories = adminCategories.length > 0
+        ? ['All', ...adminCategories
+            .filter(c => c.name !== 'Bangles' && (c.isActive !== false))
+            .map(c => c.name)]
+        : (products && products.length > 0
+            ? ['All', ...new Set(products
+                .filter(p => p.category && p.category !== 'Bangles')
+                .map(p => p.category))]
+            : ['All']);
+    const shopProducts = products ? products.filter(p => p.category !== 'Bangles') : [];
+    const maxPrice = shopProducts.length > 0 ? Math.max(...shopProducts.map(p => p.price)) : 50000;
 
 
     // Update state when URL category changes (e.g. from Header navigation)
@@ -58,9 +63,8 @@ const Shop = () => {
     useEffect(() => {
         if (!products) return;
 
-        // CRITICAL FIX: Show ALL products by default (including Bangles)
-        // User can manually filter by category if they want to exclude Bangles
-        let result = [...products];
+        // EXCLUDE Bangles from the Shop page as they have their own dedicated page
+        let result = products.filter(p => p.category !== 'Bangles');
 
         // Search Filter
         if (searchQuery) {
@@ -74,7 +78,8 @@ const Shop = () => {
         // FIXED: Case-insensitive category matching
         if (selectedCategory !== 'All') {
             result = result.filter(p =>
-                p.category && p.category.toLowerCase() === selectedCategory.toLowerCase()
+                (p.category && p.category.toLowerCase() === selectedCategory.toLowerCase()) ||
+                (p.subCategory && p.subCategory.toLowerCase() === selectedCategory.toLowerCase())
             );
         }
 
@@ -203,7 +208,7 @@ const Shop = () => {
                                         <div className="space-y-3">
                                             {categories.map(category => {
                                                 const count = category === 'All'
-                                                    ? (products ? products.length : 0)
+                                                    ? (products ? products.filter(p => p.category !== 'Bangles').length : 0)
                                                     : (products ? products.filter(p => p.category === category).length : 0);
 
                                                 return (
@@ -339,7 +344,12 @@ const Shop = () => {
                             <AnimatePresence mode='wait'>
                                 {filteredProducts && filteredProducts.length > 0 ? (
                                     <motion.div
+                                        key="product-grid"
                                         layout
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.5 }}
                                         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10"
                                     >
                                         {filteredProducts.map((product) => (
@@ -357,8 +367,10 @@ const Shop = () => {
                                     </motion.div>
                                 ) : (
                                     <motion.div
+                                        key="no-products"
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -20 }}
                                         className="text-center py-24 bg-white rounded-2xl border border-stone-100 shadow-sm"
                                     >
                                         <div className="inline-flex items-center justify-center w-20 h-20 bg-stone-50 rounded-full mb-6 text-stone-400">

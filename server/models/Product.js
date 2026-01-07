@@ -19,7 +19,9 @@ const productSchema = new mongoose.Schema({
     },
     category: {
         type: String,
-        required: [true, 'Please add a category']
+        required: [true, 'Please add a category'],
+        enum: ['Bangles', 'Sarees', 'Other'],
+        default: 'Other'
     },
     subCategory: {
         type: String
@@ -62,7 +64,35 @@ const productSchema = new mongoose.Schema({
     isHandmade: {
         type: Boolean,
         default: false
-    }
+    },
+    saleType: {
+        type: String,
+        enum: ['Single', 'Pack'],
+        default: 'Single'
+    },
+    packOptions: [{
+        packLabel: {
+            type: String,
+            required: true
+        },
+        bangleCount: {
+            type: Number,
+            required: true
+        },
+        price: {
+            type: Number,
+            required: true
+        },
+        stock: {
+            type: Number,
+            required: true,
+            default: 0
+        },
+        isPopular: {
+            type: Boolean,
+            default: false
+        }
+    }]
 }, {
     timestamps: true
 });

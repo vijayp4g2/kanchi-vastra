@@ -15,7 +15,17 @@ export const CartProvider = ({ children }) => {
     const { addToast } = useToast();
     const [cart, setCart] = useState(() => {
         const localCart = localStorage.getItem('cart');
-        return localCart ? JSON.parse(localCart) : [];
+        const parsedCart = localCart ? JSON.parse(localCart) : [];
+        // Migration: Ensure all items have cartItemId
+        return parsedCart.map(item => {
+            if (!item.cartItemId) {
+                let cid = item.id || item._id;
+                if (item.selectedPack) cid += `-${item.selectedPack.packLabel}`;
+                if (item.selectedSize) cid += `-${item.selectedSize}`;
+                return { ...item, cartItemId: cid };
+            }
+            return item;
+        });
     });
 
     useEffect(() => {
@@ -24,33 +34,64 @@ export const CartProvider = ({ children }) => {
 
     const addToCart = (product) => {
         setCart((prevCart) => {
-            const existingItem = prevCart.find((item) => item.id === product.id);
+            let cartItemId = product.id || product._id;
+
+            if (product.selectedPack) {
+                cartItemId += `-${product.selectedPack.packLabel}`;
+            }
+            // FIXED: Also append size if present, even if pack is selected (e.g. Pack of 4, Size 2.4)
+            if (product.selectedSize) {
+                cartItemId += `-${product.selectedSize}`;
+            }
+
+            const existingItem = prevCart.find((item) => item.cartItemId === cartItemId);
+
+            // If item has selectedPack, ensure we use that price
+            const itemToAdd = {
+                ...product,
+                cartItemId,
+                price: product.selectedPack ? product.selectedPack.price : product.price,
+                selectedSize: product.selectedSize // Ensure size is explicitly saved
+            };
+
             if (existingItem) {
                 return prevCart.map((item) =>
-                    item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+                    item.cartItemId === cartItemId ? { ...item, quantity: item.quantity + 1 } : item
                 );
             }
-            return [...prevCart, { ...product, quantity: 1 }];
+            return [...prevCart, { ...itemToAdd, quantity: 1 }];
         });
         addToast(`Added ${product.name} to cart`, 'success');
     };
 
-    const removeFromCart = (productId) => {
-        const itemToRemove = cart.find(item => item.id === productId);
+    const removeFromCart = (cartItemId) => {
+        // Find index to be more direct, and check multiple possible ID fields for safety
+        const itemToRemove = cart.find(item =>
+            item.cartItemId === cartItemId ||
+            item.id === cartItemId ||
+            item._id === cartItemId
+        );
+
         if (itemToRemove) {
             addToast(`Removed ${itemToRemove.name} from cart`, 'info');
-            setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
+            setCart((prevCart) => prevCart.filter((item) =>
+                item.cartItemId !== cartItemId &&
+                item.id !== cartItemId &&
+                item._id !== cartItemId
+            ));
         }
     };
 
-    const updateQuantity = (productId, quantity) => {
+    const updateQuantity = (cartItemId, quantity) => {
         if (quantity === 0) {
-            removeFromCart(productId);
+            removeFromCart(cartItemId);
             return;
         }
         setCart((prevCart) =>
             prevCart.map((item) =>
-                item.id === productId ? { ...item, quantity: Math.max(0, quantity) } : item
+                (item.cartItemId === cartItemId || item.id === cartItemId || item._id === cartItemId)
+                    ? { ...item, quantity: Math.max(0, quantity) }
+                    : item
             )
         );
     };

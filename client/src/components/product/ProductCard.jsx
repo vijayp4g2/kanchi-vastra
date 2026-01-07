@@ -38,6 +38,17 @@ const ProductCard = ({ product }) => {
                         </span>
                     )}
 
+                    {product.saleType === 'Pack' && (
+                        <span className={`absolute ${product.isNewArrival && (product.isHandmade || product.subCategory === 'Handmade')
+                                ? 'top-20'
+                                : (product.isNewArrival || product.isHandmade || product.subCategory === 'Handmade')
+                                    ? 'top-12'
+                                    : 'top-4'
+                            } left-4 bg-zinc-800/90 backdrop-blur-sm px-3 py-1 text-[10px] uppercase tracking-widest font-bold text-white rounded-full z-10`}>
+                            Packs
+                        </span>
+                    )}
+
                     <button
                         onClick={(e) => {
                             e.preventDefault();

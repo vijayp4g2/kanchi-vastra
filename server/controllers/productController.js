@@ -19,6 +19,7 @@ const getProducts = asyncHandler(async (req, res) => {
     } : {};
 
     const category = req.query.category ? { category: req.query.category } : {};
+    const status = req.query.status ? { status: req.query.status } : {};
     const newArrival = req.query.isNewArrival ? { isNewArrival: req.query.isNewArrival === 'true' } : {};
 
     // Improved Filter Logic
@@ -40,8 +41,8 @@ const getProducts = asyncHandler(async (req, res) => {
         sort = { createdAt: -1 }; // Default to newest
     }
 
-    const count = await Product.countDocuments({ ...keyword, ...category, ...newArrival, ...inStock });
-    const products = await Product.find({ ...keyword, ...category, ...newArrival, ...inStock })
+    const count = await Product.countDocuments({ ...keyword, ...category, ...status, ...newArrival, ...inStock });
+    const products = await Product.find({ ...keyword, ...category, ...status, ...newArrival, ...inStock })
         .sort(sort)
         .limit(pageSize)
         .skip(pageSize * (page - 1));
@@ -72,7 +73,7 @@ const getProductById = asyncHandler(async (req, res) => {
 // @route   POST /api/products
 // @access  Private/Admin
 const createProduct = asyncHandler(async (req, res) => {
-    const { name, price, description, images, category, subCategory, inStock, featured, isNewArrival, isHandmade } = req.body;
+    const { name, price, description, images, category, subCategory, inStock, featured, isNewArrival, isHandmade, saleType, packOptions } = req.body;
 
     const product = new Product({
         name: name || 'Sample Name',
@@ -85,6 +86,8 @@ const createProduct = asyncHandler(async (req, res) => {
         featured: featured || false,
         isNewArrival: isNewArrival !== undefined ? isNewArrival : true,
         isHandmade: isHandmade || false,
+        saleType: saleType || 'Single',
+        packOptions: packOptions || [],
         description: description || 'No description',
     });
 
@@ -96,7 +99,7 @@ const createProduct = asyncHandler(async (req, res) => {
 // @route   PUT /api/products/:id
 // @access  Private/Admin
 const updateProduct = asyncHandler(async (req, res) => {
-    const { name, price, description, images, category, subCategory, inStock, featured, isNewArrival, isHandmade } = req.body;
+    const { name, price, description, images, category, subCategory, inStock, featured, isNewArrival, isHandmade, saleType, packOptions } = req.body;
 
     const product = await Product.findById(req.params.id);
 
@@ -111,6 +114,8 @@ const updateProduct = asyncHandler(async (req, res) => {
         product.featured = featured !== undefined ? featured : product.featured;
         product.isNewArrival = isNewArrival !== undefined ? isNewArrival : product.isNewArrival;
         product.isHandmade = isHandmade !== undefined ? isHandmade : product.isHandmade;
+        product.saleType = saleType || product.saleType;
+        product.packOptions = packOptions || product.packOptions;
 
         const updatedProduct = await product.save();
         res.json(updatedProduct);

@@ -10,7 +10,8 @@ import {
     Save,
     X,
     FolderOpen,
-    Loader
+    Loader,
+    RefreshCw
 } from 'lucide-react';
 import api from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
@@ -99,6 +100,64 @@ const CategoryList = () => {
         setEditId(null);
     };
 
+    const handleSyncCategories = async () => {
+        if (!window.confirm('This will scan all products and create missing categories. Continue?')) return;
+
+        try {
+            setLoading(true);
+            const productData = await api.getProducts({ pageSize: 1000 }); // Try to get all products
+            const products = productData.products || [];
+
+            if (products.length === 0) {
+                addToast('No products found to sync from', 'info');
+                setLoading(false);
+                return;
+            }
+
+            // Extract unique categories from products
+            // We use a Set to ensure uniqueness
+            // We normalize to Title Case or just take the string as is? 
+            // Better to take as is but handle case-insensitivity check against existing
+            const productCategories = new Set(
+                products
+                    .filter(p => p.category)
+                    .map(p => p.category.trim())
+            );
+
+            const existingNames = new Set(categories.map(c => c.name.toLowerCase()));
+            let addedCount = 0;
+
+            for (const catName of productCategories) {
+                // If this category (case-insensitive) doesn't exist in our Categories list
+                if (!existingNames.has(catName.toLowerCase())) {
+                    try {
+                        await api.createCategory({
+                            name: catName,
+                            description: 'Auto-detected from products',
+                            isActive: true
+                        }, user.token);
+                        addedCount++;
+                    } catch (err) {
+                        console.error(`Failed to create category ${catName}`, err);
+                    }
+                }
+            }
+
+            if (addedCount > 0) {
+                addToast(`Successfully synced ${addedCount} new categories`, 'success');
+                fetchCategories(); // Refresh list
+            } else {
+                addToast('All product categories already exist', 'info');
+                setLoading(false);
+            }
+
+        } catch (error) {
+            console.error(error);
+            addToast('Failed to sync categories', 'error');
+            setLoading(false);
+        }
+    };
+
     const filteredCategories = categories.filter(c =>
         c.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -113,15 +172,24 @@ const CategoryList = () => {
                         <h2 className="text-lg lg:text-xl font-bold text-zinc-900">Categories</h2>
                         <p className="text-xs lg:text-sm text-zinc-500">Manage your product classifications</p>
                     </div>
-                    <div className="relative w-full sm:w-64">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                        <input
-                            type="text"
-                            placeholder="Search categories..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 outline-none transition-all"
-                        />
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleSyncCategories}
+                            className="p-2.5 text-zinc-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-zinc-900 transition-colors"
+                            title="Sync from Products"
+                        >
+                            <RefreshCw size={18} className={loading && categories.length > 0 ? "animate-spin" : ""} />
+                        </button>
+                        <div className="relative w-full sm:w-56">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                            <input
+                                type="text"
+                                placeholder="Search categories..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-zinc-900/5 focus:border-zinc-900 outline-none transition-all"
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -134,7 +202,14 @@ const CategoryList = () => {
                     <div className="bg-white rounded-xl border border-dashed border-gray-200 p-8 lg:p-12 text-center">
                         <FolderOpen size={48} className="mx-auto text-gray-300 mb-4" />
                         <h3 className="text-zinc-900 font-bold mb-1">No categories found</h3>
-                        <p className="text-zinc-500 text-sm">Create a new category to get started.</p>
+                        <p className="text-zinc-500 text-sm mb-4">Create a new category to get started.</p>
+                        <button
+                            onClick={handleSyncCategories}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-100 text-zinc-700 rounded-lg text-sm font-medium hover:bg-zinc-200 transition-colors"
+                        >
+                            <RefreshCw size={16} />
+                            Sync from Products
+                        </button>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">

@@ -28,6 +28,9 @@ const ProductForm = ({ onClose, initialData = null, defaultCategory = '', defaul
         inStock: true,
         isNewArrival: defaultNewArrival,
         isFeatured: false,
+        saleType: 'Single',
+        packOptions: [],
+        subCategory: ''
     });
 
     const [images, setImages] = useState([]);
@@ -44,6 +47,9 @@ const ProductForm = ({ onClose, initialData = null, defaultCategory = '', defaul
                 inStock: initialData.inStock !== undefined ? initialData.inStock : true,
                 isNewArrival: initialData.isNewArrival !== undefined ? initialData.isNewArrival : (initialData.isNew || false),
                 isFeatured: initialData.featured || false,
+                saleType: initialData.saleType || 'Single',
+                packOptions: initialData.packOptions || [],
+                subCategory: initialData.subCategory || ''
             });
 
             if (initialData.images && Array.isArray(initialData.images)) {
@@ -145,7 +151,10 @@ const ProductForm = ({ onClose, initialData = null, defaultCategory = '', defaul
                 images: finalImageUrls,
                 inStock: formData.inStock,
                 featured: formData.isFeatured,
-                isNewArrival: formData.isNewArrival
+                isNewArrival: formData.isNewArrival,
+                saleType: formData.saleType,
+                packOptions: formData.packOptions,
+                subCategory: formData.subCategory
             };
 
             if (initialData) {
@@ -166,10 +175,25 @@ const ProductForm = ({ onClose, initialData = null, defaultCategory = '', defaul
         }
     };
 
-    const isBangles = formData.category === 'Bangles' || defaultCategory === 'Bangles';
-    const categories = isBangles
-        ? ['Bangles']
-        : ['Wedding', 'Kanchipuram', 'Festival', 'Casual', 'Modern'];
+    const [categories, setCategories] = useState(['Bangles', 'Sarees', 'Other']); // Default fallback
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const data = await api.getCategories();
+                if (data && (Array.isArray(data) || Array.isArray(data.categories))) {
+                    const cats = Array.isArray(data) ? data : data.categories;
+                    if (cats.length > 0) {
+                        setCategories(cats.map(c => c.name));
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load categories', error);
+                // Fallback to defaults if fetch fails
+            }
+        };
+        fetchCategories();
+    }, []);
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -182,7 +206,7 @@ const ProductForm = ({ onClose, initialData = null, defaultCategory = '', defaul
                 {/* Header */}
                 <div className="px-8 py-5 border-b border-gray-100 flex items-center justify-between bg-white z-10">
                     <h2 className="text-xl font-bold text-zinc-900">
-                        {initialData ? 'Edit Item' : 'New Item'}
+                        {initialData ? 'Edit Product' : 'Add New Product'}
                     </h2>
                     <button
                         onClick={onClose}
@@ -234,6 +258,152 @@ const ProductForm = ({ onClose, initialData = null, defaultCategory = '', defaul
                             <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" multiple accept="image/*" />
                         </div>
 
+                        {/* Sale Type */}
+                        <div className="space-y-4 pt-4 border-t border-gray-100">
+                            <div className="flex items-center gap-4">
+                                <label className="text-sm font-bold text-zinc-700">Product Sale Type</label>
+                                <div className="flex items-center gap-3 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(prev => ({ ...prev, saleType: 'Single' }))}
+                                        className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${formData.saleType === 'Single' ? 'bg-white text-zinc-900 shadow-sm border border-gray-200' : 'text-zinc-500 hover:text-zinc-700'}`}
+                                    >
+                                        Single Bangle
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(prev => ({ ...prev, saleType: 'Pack' }))}
+                                        className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${formData.saleType === 'Pack' ? 'bg-white text-zinc-900 shadow-sm border border-gray-200' : 'text-zinc-500 hover:text-zinc-700'}`}
+                                    >
+                                        Pack of Bangles
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Pack Options Section */}
+                            {formData.saleType === 'Pack' && (
+                                <div className="space-y-4 bg-gray-50/50 p-4 rounded-xl border border-gray-100 animate-in slide-in-from-top-2 duration-300">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
+                                            <Layers size={14} className="text-amber-600" /> Pack Options
+                                        </h3>
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData(prev => ({
+                                                ...prev,
+                                                packOptions: [...prev.packOptions, { packLabel: '', bangleCount: 0, price: 0, stock: 10, isPopular: false }]
+                                            }))}
+                                            className="text-xs font-bold text-amber-600 hover:text-amber-700 hover:bg-amber-50 px-3 py-1.5 rounded-lg transition-all"
+                                        >
+                                            + Add Pack Option
+                                        </button>
+                                    </div>
+
+                                    {formData.packOptions.length === 0 ? (
+                                        <div className="text-center py-6 text-gray-400 text-sm italic">
+                                            No pack options added yet. Click "Add Pack Option" to start.
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {formData.packOptions.map((pack, idx) => (
+                                                <div key={idx} className="grid grid-cols-12 gap-3 items-end bg-white p-3 rounded-lg border border-gray-200 shadow-sm relative group">
+                                                    <div className="col-span-3">
+                                                        <label className="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Label</label>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="e.g. Pack of 4"
+                                                            value={pack.packLabel}
+                                                            onChange={(e) => {
+                                                                const newPacks = [...formData.packOptions];
+                                                                newPacks[idx].packLabel = e.target.value;
+                                                                setFormData(prev => ({ ...prev, packOptions: newPacks }));
+                                                            }}
+                                                            className="w-full px-2 py-1.5 rounded border border-gray-200 text-xs font-medium focus:border-zinc-900 outline-none"
+                                                        />
+                                                    </div>
+                                                    <div className="col-span-2">
+                                                        <label className="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Count</label>
+                                                        <input
+                                                            type="number"
+                                                            placeholder="Qty"
+                                                            value={pack.bangleCount}
+                                                            onChange={(e) => {
+                                                                const newPacks = [...formData.packOptions];
+                                                                newPacks[idx].bangleCount = parseInt(e.target.value) || 0;
+                                                                setFormData(prev => ({ ...prev, packOptions: newPacks }));
+                                                            }}
+                                                            className="w-full px-2 py-1.5 rounded border border-gray-200 text-xs font-medium focus:border-zinc-900 outline-none"
+                                                        />
+                                                    </div>
+                                                    <div className="col-span-3">
+                                                        <label className="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Price (₹)</label>
+                                                        <input
+                                                            type="number"
+                                                            placeholder="0.00"
+                                                            value={pack.price}
+                                                            onChange={(e) => {
+                                                                const newPacks = [...formData.packOptions];
+                                                                newPacks[idx].price = parseInt(e.target.value) || 0;
+                                                                setFormData(prev => ({ ...prev, packOptions: newPacks }));
+                                                            }}
+                                                            className="w-full px-2 py-1.5 rounded border border-gray-200 text-xs font-medium focus:border-zinc-900 outline-none"
+                                                        />
+                                                    </div>
+                                                    <div className="col-span-2">
+                                                        <label className="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Stock</label>
+                                                        <input
+                                                            type="number"
+                                                            placeholder="0"
+                                                            value={pack.stock}
+                                                            onChange={(e) => {
+                                                                const newPacks = [...formData.packOptions];
+                                                                newPacks[idx].stock = parseInt(e.target.value) || 0;
+                                                                setFormData(prev => ({ ...prev, packOptions: newPacks }));
+                                                            }}
+                                                            className="w-full px-2 py-1.5 rounded border border-gray-200 text-xs font-medium focus:border-zinc-900 outline-none"
+                                                        />
+                                                    </div>
+                                                    <div className="col-span-2 flex items-center justify-between pb-1.5">
+                                                        <label className="cursor-pointer group/toggle relative" title="Mark as Popular">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={pack.isPopular}
+                                                                onChange={(e) => {
+                                                                    const newPacks = [...formData.packOptions];
+                                                                    // Uncheck others if this one is checked (optional logic, but typically only one popular)
+                                                                    if (e.target.checked) {
+                                                                        newPacks.forEach(p => p.isPopular = false);
+                                                                    }
+                                                                    newPacks[idx].isPopular = e.target.checked;
+                                                                    setFormData(prev => ({ ...prev, packOptions: newPacks }));
+                                                                }}
+                                                                className="hidden"
+                                                            />
+                                                            <div className={`w-6 h-6 rounded bg-gray-100 flex items-center justify-center transition-colors ${pack.isPopular ? 'bg-amber-100 text-amber-600' : 'text-gray-300 hover:text-gray-400'}`}>
+                                                                <Save size={14} className={pack.isPopular ? "fill-current" : ""} />
+                                                            </div>
+                                                        </label>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const newPacks = [...formData.packOptions];
+                                                                newPacks.splice(idx, 1);
+                                                                setFormData(prev => ({ ...prev, packOptions: newPacks }));
+                                                            }}
+                                                            className="text-gray-300 hover:text-rose-500 transition-colors p-1"
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
                         {/* Basic Details */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
@@ -265,6 +435,20 @@ const ProductForm = ({ onClose, initialData = null, defaultCategory = '', defaul
                                     <option value="" disabled>Select Category</option>
                                     {categories.map(c => <option key={c} value={c}>{c}</option>)}
                                 </select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase">
+                                    <Layers size={14} /> Sub-Category
+                                </label>
+                                <input
+                                    type="text"
+                                    name="subCategory"
+                                    value={formData.subCategory || ''}
+                                    onChange={handleChange}
+                                    placeholder="e.g. Kanchipuram, Wedding, etc."
+                                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 outline-none transition-all font-medium text-zinc-900 placeholder:text-gray-300"
+                                />
                             </div>
 
                             <div className="space-y-2 col-span-full">

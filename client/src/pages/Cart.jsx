@@ -16,7 +16,11 @@ const Cart = () => {
         let message = "Hello, I would like to place an order for the following items:\n\n";
 
         cart.forEach((item, index) => {
-            message += `${index + 1}. *${item.name}*\n   Quantity: ${item.quantity}\n   Price: ₹${(item.price * item.quantity).toLocaleString()}\n\n`;
+            let variantInfo = '';
+            if (item.selectedPack) variantInfo += ` - ${item.selectedPack.packLabel}`;
+            if (item.selectedSize) variantInfo += ` - Size: ${item.selectedSize}`;
+
+            message += `${index + 1}. *${item.name}${variantInfo}*\n   Quantity: ${item.quantity}\n   Price: ₹${(item.price * item.quantity).toLocaleString()}\n\n`;
         });
 
         message += `*Total Amount: ₹${finalTotal.toLocaleString()}*\n\nPlease confirm my order.`;
@@ -68,7 +72,7 @@ const Cart = () => {
                         <AnimatePresence>
                             {cart.map((item) => (
                                 <motion.div
-                                    key={item.id}
+                                    key={item.cartItemId || item.id || item._id}
                                     layout
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -100,7 +104,25 @@ const Cart = () => {
                                                         {item.name}
                                                     </h3>
                                                 </Link>
-                                                <p className="text-sm text-gray-500 mt-1">Free Size • Silk Mark Certified</p>
+                                                {item.selectedPack && (
+                                                    <p className="text-sm font-bold text-maroon-700 mt-0.5">
+                                                        {item.selectedPack.packLabel} - {item.selectedPack.bangleCount} Bangles
+                                                    </p>
+                                                )}
+
+                                                {item.selectedSize && (
+                                                    <p className="text-sm font-bold text-maroon-700 mt-0.5">
+                                                        Size: {item.selectedSize}
+                                                    </p>
+                                                )}
+
+                                                {!item.selectedPack && !item.selectedSize && (
+                                                    <p className="text-sm text-gray-500 mt-1">Free Size • Silk Mark Certified</p>
+                                                )}
+                                                {/* Only show 'Free Size' line if not showing pack or size info to avoid clutter, or keep passing other info */}
+                                                {(item.selectedPack || item.selectedSize) && (
+                                                    <p className="text-sm text-gray-500 mt-1">Silk Mark Certified</p>
+                                                )}
                                             </div>
                                             <div className="font-serif text-xl font-medium text-gray-900 mt-2 md:mt-0">
                                                 ₹{(item.price * item.quantity).toLocaleString()}
@@ -112,7 +134,7 @@ const Cart = () => {
                                                 {/* Quantity Control */}
                                                 <div className="flex items-center border border-gray-200 rounded-lg bg-gray-50">
                                                     <button
-                                                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                        onClick={() => updateQuantity(item.cartItemId || item.id || item._id, item.quantity - 1)}
                                                         className="p-2 text-gray-500 hover:text-gray-900 hover:bg-white rounded-l-lg transition-colors"
                                                         aria-label="Decrease quantity"
                                                     >
@@ -122,7 +144,7 @@ const Cart = () => {
                                                         {item.quantity}
                                                     </span>
                                                     <button
-                                                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                                        onClick={() => updateQuantity(item.cartItemId || item.id || item._id, item.quantity + 1)}
                                                         className="p-2 text-gray-500 hover:text-gray-900 hover:bg-white rounded-r-lg transition-colors"
                                                         aria-label="Increase quantity"
                                                     >
@@ -131,7 +153,7 @@ const Cart = () => {
                                                 </div>
 
                                                 <button
-                                                    onClick={() => removeFromCart(item.id)}
+                                                    onClick={() => removeFromCart(item.cartItemId || item.id || item._id)}
                                                     className="flex items-center gap-1 text-sm text-gray-400 hover:text-red-600 transition-colors"
                                                 >
                                                     <Trash2 size={16} />

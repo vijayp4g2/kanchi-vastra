@@ -29,10 +29,28 @@ const NewArrivals = () => {
     useEffect(() => {
         if (products) {
             // CRITICAL FIX: Show ALL new arrivals (including Bangles)
-            // Filter only by isNewArrival flag, not by category
-            const newProducts = products.filter(product => product.isNewArrival);
-            setNewArrivals(newProducts);
-            setSortedProducts(newProducts);
+            // Filter only by isNewArrival flag and Active status
+            const newProducts = products.filter(product =>
+                product.isNewArrival === true &&
+                (product.status?.toLowerCase() === 'active' || product.inStock === true) // Fallback to inStock if status missing, or both
+            );
+
+            // Refined check: The requirements say status=active. 
+            // The model has 'status' ('Active'/'Inactive'). 
+            // Let's stick strictly to the requirement but be robust.
+            const validNewProducts = products.filter(product => {
+                const isNew = product.isNewArrival === true;
+                const isActive = product.status === 'Active' || product.status === 'active';
+                // Note: Some older products might not have status field populated if they were created before schema update, 
+                // or if API doesn't return it. The plan mentioned API returns 'status'.
+                // Let's assume 'Active' default if undefined, or check strictly? 
+                // Requirement 1: "status = active". 
+                // Given the Product model has default: 'Active', it should be there.
+                return isNew && isActive;
+            });
+
+            setNewArrivals(validNewProducts);
+            setSortedProducts(validNewProducts);
         }
     }, [products]);
 
@@ -133,6 +151,16 @@ const NewArrivals = () => {
                 {loading ? (
                     <div className="flex justify-center items-center py-20">
                         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold-600"></div>
+                    </div>
+                ) : sortedProducts.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                        <div className="p-6 bg-stone-100 rounded-full mb-4">
+                            <Sparkles className="w-8 h-8 text-gray-400" />
+                        </div>
+                        <h3 className="text-xl font-serif text-gray-800 mb-2">No new arrivals available.</h3>
+                        <p className="text-gray-500 max-w-md mx-auto">
+                            Our artisans are crafting new masterpieces. Please check back soon or explore our existing collection.
+                        </p>
                     </div>
                 ) : (
                     <motion.div

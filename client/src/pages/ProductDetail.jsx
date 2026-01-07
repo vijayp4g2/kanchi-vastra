@@ -25,6 +25,7 @@ const ProductDetail = () => {
     const [loading, setLoading] = useState(true);
     const [relatedProducts, setRelatedProducts] = useState([]);
     const [isZoomed, setIsZoomed] = useState(false);
+    const [selectedPack, setSelectedPack] = useState(null);
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
     const bangleSizes = ['2.2', '2.4', '2.6', '2.8', '2.10'];
@@ -43,7 +44,20 @@ const ProductDetail = () => {
 
                 setProduct(foundProduct);
                 if (foundProduct) {
-                    setMainImage(foundProduct.images && foundProduct.images.length > 0 ? foundProduct.images[0] : foundProduct.image);
+                    // Logic to get initial main image URL
+                    let initialImage = '';
+                    if (foundProduct.images && foundProduct.images.length > 0) {
+                        const firstImg = foundProduct.images[0];
+                        initialImage = (typeof firstImg === 'object' && firstImg.url) ? firstImg.url : firstImg;
+                    } else if (foundProduct.image) {
+                        initialImage = foundProduct.image;
+                    }
+                    setMainImage(initialImage);
+
+                    if (foundProduct.saleType === 'Pack' && foundProduct.packOptions?.length > 0) {
+                        const defaultPack = foundProduct.packOptions.find(p => p.isPopular) || foundProduct.packOptions[0];
+                        setSelectedPack(defaultPack);
+                    }
                 }
 
                 // Find related products
@@ -93,7 +107,9 @@ const ProductDetail = () => {
         );
     }
 
-    const images = product.images && product.images.length > 0 ? product.images : [product.image];
+    const images = product.images && product.images.length > 0 
+        ? product.images.map(img => (typeof img === 'object' && img.url) ? img.url : img)
+        : [product.image];
 
     return (
         <div className="min-h-screen bg-stone-50 pt-28 pb-16">
@@ -199,7 +215,7 @@ const ProductDetail = () => {
                         </h1>
 
                         <div className="flex items-center gap-6 mb-8">
-                            <span className="text-4xl font-bold text-maroon-800">₹{product.price.toLocaleString()}</span>
+                            <span className="text-4xl font-bold text-maroon-800">₹{(selectedPack ? selectedPack.price : product.price).toLocaleString()}</span>
                             <div className="h-8 w-px bg-stone-200"></div>
                             <div className="flex flex-col">
                                 <div className="flex items-center gap-1 text-gold-500">
@@ -219,27 +235,85 @@ const ProductDetail = () => {
                         {/* Selectors */}
                         <div className="space-y-8 mb-10 border-t border-stone-200 pt-8">
 
-                            {/* Size Selection */}
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <span className="font-bold text-gray-900 uppercase tracking-widest text-xs">Select Size</span>
-                                    <button className="text-maroon-600 text-xs font-bold hover:underline">Size Guide</button>
+                            {/* Pack Selection */}
+                            {product.saleType === 'Pack' && product.packOptions && (
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-bold text-gray-900 uppercase tracking-widest text-xs">Select Pack Size</span>
+                                        {selectedPack && <span className="text-xs text-maroon-600 font-medium">Bangles in pack: {selectedPack.bangleCount}</span>}
+                                    </div>
+                                    <div className="flex flex-col gap-3">
+                                        {product.packOptions.map((pack, idx) => (
+                                            <label
+                                                key={idx}
+                                                className={`relative flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${selectedPack === pack
+                                                    ? 'border-maroon-600 bg-maroon-50/50'
+                                                    : 'border-stone-200 hover:border-maroon-200'
+                                                    }`}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="pack"
+                                                    className="hidden"
+                                                    checked={selectedPack === pack}
+                                                    onChange={() => setSelectedPack(pack)}
+                                                />
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPack === pack ? 'border-maroon-600' : 'border-gray-300'
+                                                        }`}>
+                                                        {selectedPack === pack && <div className="w-2.5 h-2.5 rounded-full bg-maroon-600" />}
+                                                    </div>
+                                                    <div>
+                                                        <span className={`block font-bold ${selectedPack === pack ? 'text-maroon-900' : 'text-gray-700'}`}>
+                                                            {pack.packLabel}
+                                                        </span>
+                                                        <span className="text-xs text-gray-500">
+                                                            {pack.bangleCount} Bangles
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className={`block font-bold ${selectedPack === pack ? 'text-maroon-900' : 'text-gray-900'}`}>
+                                                        ₹{pack.price.toLocaleString()}
+                                                    </span>
+                                                    {pack.isPopular && (
+                                                        <span className="text-[10px] text-amber-600 font-bold uppercase tracking-wider flex items-center justify-end gap-1">
+                                                            <Star size={10} fill="currentColor" /> Most Popular
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </label>
+                                        ))}
+                                    </div>
+                                    <p className="text-xs text-gray-500 italic bg-stone-50 p-3 rounded-lg border border-stone-100">
+                                        All bangles in the pack are of the same design & size.
+                                    </p>
                                 </div>
-                                <div className="flex flex-wrap gap-3">
-                                    {bangleSizes.map((size) => (
-                                        <button
-                                            key={size}
-                                            onClick={() => setSelectedSize(size)}
-                                            className={`h-12 w-16 flex items-center justify-center rounded-lg font-medium transition-all ${selectedSize === size
-                                                ? 'bg-maroon-700 text-white shadow-lg ring-4 ring-maroon-100'
-                                                : 'bg-white border border-stone-200 text-gray-600 hover:border-maroon-300'
-                                                }`}
-                                        >
-                                            {size}
-                                        </button>
-                                    ))}
+                            )}
+
+                            {/* Size Selection - Only show for Bangles */}
+                            {product.category === 'Bangles' && (
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-bold text-gray-900 uppercase tracking-widest text-xs">Select Size</span>
+                                        <button className="text-maroon-600 text-xs font-bold hover:underline">Size Guide</button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-3">
+                                        {bangleSizes.map((size) => (
+                                            <button
+                                                key={size}
+                                                onClick={() => setSelectedSize(size)}
+                                                className={`h-12 w-16 flex items-center justify-center rounded-lg font-medium transition-all ${selectedSize === size
+                                                    ? 'bg-maroon-700 text-white shadow-lg ring-4 ring-maroon-100'
+                                                    : 'bg-white border border-stone-200 text-gray-600 hover:border-maroon-300'
+                                                    }`}
+                                            >
+                                                {size}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Quantity */}
                             <div className="space-y-4">
@@ -265,7 +339,7 @@ const ProductDetail = () => {
                         {/* Action Buttons */}
                         <div className="grid grid-cols-2 gap-4 mb-10">
                             <button
-                                onClick={() => addToCart({ ...product, quantity, selectedSize })}
+                                onClick={() => addToCart({ ...product, quantity, selectedSize, selectedPack })}
                                 className="col-span-1 bg-maroon-700 text-white py-5 px-6 rounded-2xl font-bold shadow-2xl hover:bg-maroon-800 active:scale-[0.98] transition-all flex items-center justify-center gap-3 group"
                             >
                                 <ShoppingBag size={22} className="group-hover:animate-bounce" />
@@ -488,10 +562,10 @@ const ProductDetail = () => {
             <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-2xl border-t border-stone-200 p-5 z-50 flex items-center gap-5 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
                 <div className="flex-1">
                     <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest">Price</p>
-                    <p className="text-2xl font-black text-maroon-800">₹{product.price.toLocaleString()}</p>
+                    <p className="text-2xl font-black text-maroon-800">₹{(selectedPack ? selectedPack.price : product.price).toLocaleString()}</p>
                 </div>
                 <button
-                    onClick={() => addToCart({ ...product, quantity, selectedSize })}
+                    onClick={() => addToCart({ ...product, quantity, selectedSize, selectedPack })}
                     className="flex-[2] bg-maroon-700 text-white px-8 py-5 rounded-2xl font-black shadow-2xl shadow-maroon-200 active:scale-95 transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs"
                 >
                     <ShoppingBag size={20} />

@@ -44,9 +44,24 @@ const ProductList = ({ initialCategory = '', filterNewArrivals = false }) => {
 
     // Derived Constants
     const isBangles = initialCategory === 'Bangles';
-    const categories = isBangles
-        ? ['Bangles']
-        : ['Wedding', 'Kanchipuram', 'Festival', 'Casual', 'Modern'];
+    const [categories, setCategories] = useState(['Bangles', 'Sarees', 'Other']); // Default fallback
+
+    useEffect(() => {
+        const fetchCategoriesFromApi = async () => {
+            try {
+                const data = await api.getCategories();
+                if (data && (Array.isArray(data) || Array.isArray(data.categories))) {
+                    const cats = Array.isArray(data) ? data : data.categories;
+                    if (cats.length > 0) {
+                        setCategories(cats.map(c => c.name));
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load categories', error);
+            }
+        };
+        fetchCategoriesFromApi();
+    }, []);
 
     useEffect(() => {
         setCategoryFilter(initialCategory);

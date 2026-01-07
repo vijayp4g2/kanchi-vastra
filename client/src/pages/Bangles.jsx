@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight, Filter, Truck, Shield, Clock } from 'lucide-react';
-import { useProduct } from '../context/ProductContext';
+import api from '../utils/api';
 import ProductCard from '../components/product/ProductCard';
 
 const fadeInUp = {
@@ -20,23 +20,37 @@ const staggerContainer = {
 };
 
 const Bangles = () => {
-    const { products, loading, error } = useProduct();
-    // Filter products specifically for Bangles
     const [bangleCollections, setBangleCollections] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [sortedProducts, setSortedProducts] = useState([]);
     const [sortBy, setSortBy] = useState('featured');
     const [activeFilter, setActiveFilter] = useState('all');
 
     useEffect(() => {
-        if (products) {
-            // FIXED: Case-insensitive category matching for Bangles
-            const bangles = products.filter(product =>
-                product.category && product.category.toLowerCase() === 'bangles'
-            );
-            setBangleCollections(bangles);
-            setSortedProducts(bangles);
-        }
-    }, [products]);
+        const fetchBangles = async () => {
+            setLoading(true);
+            try {
+                // Fetch specifically for Bangles
+                const data = await api.getProducts({
+                    category: 'Bangles',
+                    status: 'Active',
+                    pageSize: 1000 // Get all bangles
+                });
+                const bangles = data.products || [];
+                setBangleCollections(bangles);
+                setSortedProducts(bangles);
+                setError(null);
+            } catch (err) {
+                console.error('Error fetching bangles:', err);
+                setError('Failed to load bangles collection');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchBangles();
+    }, []);
 
     // Handle sorting and filtering
     useEffect(() => {
@@ -76,58 +90,144 @@ const Bangles = () => {
     return (
         <div className="min-h-screen bg-stone-50 pt-20">
             {/* Hero Section */}
-            <section className="relative h-[50vh] md:h-[60vh] flex items-center justify-center overflow-hidden">
-                <div className="absolute inset-0">
+            <section className="relative h-[75vh] md:h-[85vh] flex items-center justify-center overflow-hidden">
+                <motion.div
+                    initial={{ scale: 1.1 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
+                    className="absolute inset-0"
+                >
                     <img
-                        src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=2670&auto=format&fit=crop"
-                        alt="Bangles Collection Hero"
+                        src="/assets/hero/bangles-hero.png"
+                        alt="Handcrafted Luxury Bangles"
                         className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"></div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-stone-50 via-transparent to-transparent"></div>
+                    {/* Multi-layered overlays for depth */}
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-[0.5px]"></div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-stone-50"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20"></div>
+                </motion.div>
+
+                {/* Floating Decorative Elements */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    {[...Array(6)].map((_, i) => (
+                        <motion.div
+                            key={i}
+                            initial={{ opacity: 0 }}
+                            animate={{
+                                opacity: [0.2, 0.5, 0.2],
+                                y: [0, -20, 0],
+                                x: [0, 10, 0]
+                            }}
+                            transition={{
+                                duration: 3 + i,
+                                repeat: Infinity,
+                                delay: i * 0.5
+                            }}
+                            className="absolute"
+                            style={{
+                                top: `${Math.random() * 100}%`,
+                                left: `${Math.random() * 100}%`,
+                            }}
+                        >
+                            <Sparkles className="text-gold-300/30 w-4 h-4" />
+                        </motion.div>
+                    ))}
                 </div>
 
-                <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
+                <div className="relative z-10 text-center max-w-5xl mx-auto px-6">
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8 }}
+                        transition={{ duration: 1, ease: "easeOut" }}
                     >
-                        <span className="inline-block py-1 px-4 border border-white/30 rounded-full bg-white/10 backdrop-blur-md text-white text-xs md:text-sm tracking-[0.2em] uppercase mb-6">
+                        <motion.span
+                            initial={{ letterSpacing: "0.5em", opacity: 0 }}
+                            animate={{ letterSpacing: "0.2em", opacity: 1 }}
+                            transition={{ duration: 1, delay: 0.2 }}
+                            className="inline-block py-2 px-6 border border-gold-300/30 rounded-full bg-white/5 backdrop-blur-md text-gold-200 text-xs md:text-sm uppercase mb-8 shadow-2xl"
+                        >
                             Artisanal Craftsmanship
-                        </span>
-                        <h1 className="text-5xl md:text-7xl font-serif text-white mb-6 leading-tight">
-                            The Bangle <span className="italic text-gold-300">Artistry</span>
+                        </motion.span>
+                        <h1 className="text-6xl md:text-8xl font-serif text-white mb-8 leading-tight tracking-tight">
+                            The Bangle <span className="relative inline-block">
+                                <span className="italic text-gold-300">Artistry</span>
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: "100%" }}
+                                    transition={{ duration: 1, delay: 1 }}
+                                    className="absolute -bottom-2 left-0 h-[1px] bg-gold-400"
+                                />
+                            </span>
                         </h1>
-                        <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto font-light leading-relaxed">
-                            Discover our exquisite collection of hand-made and traditional bangles, where every piece tells a story of heritage.
+                        <p className="text-lg md:text-2xl text-white/80 max-w-2xl mx-auto font-light leading-relaxed mb-10">
+                            Where every circle tells a story. Discover our curated collection of <span className="text-gold-100 font-normal">hand-woven silk</span> and <span className="text-gold-100 font-normal">traditional temple</span> designs.
                         </p>
+
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 1.2 }}
+                            className="flex flex-col items-center gap-4"
+                        >
+                            <button
+                                onClick={() => document.getElementById('collection-grid')?.scrollIntoView({ behavior: 'smooth' })}
+                                className="group relative px-10 py-4 bg-white text-gray-900 rounded-full overflow-hidden transition-all duration-300 hover:shadow-[0_0_30px_rgba(212,175,55,0.3)]"
+                            >
+                                <span className="relative z-10 font-medium tracking-wide flex items-center gap-2">
+                                    Explore Collection <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                </span>
+                                <div className="absolute inset-0 bg-gold-50 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500"></div>
+                            </button>
+                        </motion.div>
                     </motion.div>
                 </div>
+
+                {/* Scroll Indicator */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1, y: [0, 10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: 2 }}
+                    className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/40 flex flex-col items-center gap-2"
+                >
+                    <span className="text-[10px] uppercase tracking-[0.3em]">Scroll</span>
+                    <div className="w-[1px] h-12 bg-gradient-to-b from-white/40 to-transparent"></div>
+                </motion.div>
             </section>
 
-            {/* Features Bar */}
-            <div className="bg-white border-b border-stone-100 py-6">
-                <div className="container mx-auto px-6">
-                    <div className="flex flex-wrap justify-center gap-8 md:gap-16">
-                        <div className="flex items-center gap-3 text-gray-600">
-                            <Truck size={20} className="text-gold-600" />
-                            <span className="text-sm uppercase tracking-wide">Secure Delivery</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-gray-600">
-                            <Shield size={20} className="text-gold-600" />
-                            <span className="text-sm uppercase tracking-wide">Pure Materials</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-gray-600">
-                            <Clock size={20} className="text-gold-600" />
-                            <span className="text-sm uppercase tracking-wide">Handmade Art</span>
+            {/* Features Bar - Integrated Design */}
+            <div className="relative z-20 -mt-10 mb-10 px-6">
+                <div className="max-w-6xl mx-auto">
+                    <div className="bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-stone-100 py-10 px-8">
+                        <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-stone-100">
+                            <div className="flex flex-col items-center text-center px-4 py-6 md:py-0">
+                                <div className="w-12 h-12 bg-gold-50 rounded-full flex items-center justify-center mb-4 text-gold-600">
+                                    <Truck size={24} />
+                                </div>
+                                <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-widest mb-2">Secure Delivery</h4>
+                                <p className="text-xs text-stone-500 max-w-[200px]">Handled with care and delivered to your doorstep safely.</p>
+                            </div>
+                            <div className="flex flex-col items-center text-center px-4 py-6 md:py-0">
+                                <div className="w-12 h-12 bg-gold-50 rounded-full flex items-center justify-center mb-4 text-gold-600">
+                                    <Shield size={24} />
+                                </div>
+                                <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-widest mb-2">Pure Materials</h4>
+                                <p className="text-xs text-stone-500 max-w-[200px]">Only the finest silk and skin-friendly base materials.</p>
+                            </div>
+                            <div className="flex flex-col items-center text-center px-4 py-6 md:py-0">
+                                <div className="w-12 h-12 bg-gold-50 rounded-full flex items-center justify-center mb-4 text-gold-600">
+                                    <Clock size={24} />
+                                </div>
+                                <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-widest mb-2">Handmade Art</h4>
+                                <p className="text-xs text-stone-500 max-w-[200px]">Every piece is handcrafted over hours of patient work.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Content Area */}
-            <section className="py-16 px-4 md:px-8 max-w-7xl mx-auto">
+            <section id="collection-grid" className="py-16 px-4 md:px-8 max-w-7xl mx-auto">
                 {/* Controls */}
                 <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-8">
                     <div>
